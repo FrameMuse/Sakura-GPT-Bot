@@ -1,2 +1,5 @@
 *.json
 *.png
+.env
+/staled
+__pycache__

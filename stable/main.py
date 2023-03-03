@@ -66,7 +66,6 @@ def text(message):
             behaviors_dict[Behaviors.__dict__[behavior].name] = Behaviors.__dict__[behavior]
 
     if message.text in behaviors_dict:
-        
         chat_user.behavior = behaviors_dict[message.text].behaviour
         bot.send_chat_action(message.chat.id, "typing")
         chat_user.clear_message_history()

@@ -23,10 +23,10 @@ def get_avaliable_behaviours():
 
 def on_behaviour_change(message, chat_user: ChatUser, bot):
     chat_user.personality = Personalities.find_by_title(message.text)
+    chat_user.clear_message_history()
     chat_user.save()
     # Modify behaviour.
     chat_user.personality.behaviour += " Человека с которым ты общаешься зовут " + message.from_user.first_name
-    chat_user.clear_message_history()
 
     bot.send_chat_action(message.chat.id, "typing")
     message_content = chatGPT("Привет!", chat_user.personality, chat_user.messages)

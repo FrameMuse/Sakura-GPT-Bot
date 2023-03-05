@@ -35,4 +35,4 @@ def recognize(audio_file):
         user_audio = r.record(source)
 
     text = r.recognize_google(user_audio, language='ru-RU')
-    return text
+    return str(text)

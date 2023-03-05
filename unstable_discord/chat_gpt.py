@@ -18,7 +18,7 @@ def chatGPT(user_message, behaviour, previous_messages=[]):
         }
     ]
 
-    print(previous_messages)
+    # print(previous_messages)
 
     messages =  start_messages + previous_messages + user_messages
 

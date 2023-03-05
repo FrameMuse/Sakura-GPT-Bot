@@ -8,7 +8,7 @@ import openai
 
 import re
 
-from behaviors import Behaviors
+from behaviors import Personalities
 
 from goods import Goods, Good
 
@@ -40,7 +40,7 @@ regex = r"\[image description: (.*?)]"
 @bot.message_handler(commands=["start"])
 def start_command(message):
 
-    behaviors_list = Behaviors.get_names()
+    behaviors_list = Personalities.get_names()
     
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=4)
     buttons = [types.KeyboardButton(name) for name in behaviors_list]
@@ -52,7 +52,7 @@ def start_command(message):
 @bot.pre_checkout_query_handler(func=lambda call: True)
 def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
     # Отправляем запрос на проверку счета
-    print(pre_checkout_query.order_info)
+    # print(pre_checkout_query.order_info)
     bot.answer_pre_checkout_query(int(pre_checkout_query.id), ok=True)
 
 
@@ -105,25 +105,20 @@ def texts(message):
        on_profile_button(message,bot,chat_user)
        return
     
-    
 
     if chat_user.tokens < int(len(message.text)/0.75):
         bot.send_message(message.chat.id, "Уууппс, у тебя недостаточно токенов для отправки сообщения! Твой баланс токенов равен: "+str(chat_user.tokens))
         chat_user.save()
         return
 
-    if chat_user.tokens <= 0:
-        text("", bot, chat_user)
-        return
-
     behaviors_dict = get_avaliable_behaviours()
     if message.text in behaviors_dict:
-        on_behaviour_change(message,chat_user, bot, behaviors_dict)
+        on_behaviour_change(message,chat_user, bot)
         return
     
-
+    
     text(message, bot, chat_user)
-
+    
 
 @bot.edited_message_handler(func=lambda message: True)
 def edit_text(message):
@@ -131,7 +126,7 @@ def edit_text(message):
     chat_user.restore_message_history()
 
     bot.send_chat_action(message.chat.id, "typing")
-    message_content = chatGPT(message.text, chat_user.behavior, chat_user.messages)
+    message_content = chatGPT(message.text, chat_user.personality, chat_user.messages)
 
     bot.edit_message_text(chat_id=message.chat.id,
                           message_id=last_message[-1].id, text=message_content)
@@ -160,7 +155,7 @@ def voice(message):
 
     bot.send_chat_action(message.chat.id, "typing")
 
-    message_content = chatGPT(text, chat_user.behavior, chat_user.messages)
+    message_content = chatGPT(text, chat_user.personality, chat_user.messages)
     chat_user.add_message("assistant",message_content)
 
     bot.reply_to(sent_message, message_content)

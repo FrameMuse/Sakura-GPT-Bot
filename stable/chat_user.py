@@ -1,28 +1,26 @@
 import json
 from pathlib import Path
 
-from behaviors import Behaviors
+from behaviors import Personality, Personalities
 
 
 class ChatUser:
     user_id: int
     user_storage_path: Path
 
-    messages: "list[dict[str, str]]"
     messages_file_path: Path
-
-    behavior: str
     settings_file_path: Path
 
+    messages: "list[dict[str, str]]"
+    personality: Personality
+    #Monetization part
     tokens: int
+    
 
     def __init__(self, user_id: int):
         self.user_id = user_id
-        self.behavior = Behaviors.Sakura.behaviour
         self.user_storage_path = Path("user-data/" + str(user_id))
         self.user_storage_path.parent.mkdir(exist_ok=True, parents=True)
-
-        self.tokens = 500
 
         self.messages = []
         self.messages_file_path = Path(
@@ -32,6 +30,11 @@ class ChatUser:
         self.settings_file_path = Path(
             self.user_storage_path.as_posix() + "/settings.json")
         self.settings_file_path.parent.mkdir(exist_ok=True, parents=True)
+
+        # Default personality.
+        self.personality = Personalities.Sakura()
+        # Default tokens.
+        self.tokens = 1000
 
     def restore_message_history(self):
         """
@@ -50,20 +53,24 @@ class ChatUser:
 
     def restore_settings(self):
         """
-        ##
+        Restores user settings like `tokens`, `personality` and saves them in `settings` field.
+
+        Unique for each user.
         """
 
         if not self.settings_file_path.exists():
             return
 
-        file_content = self.settings_file_path.read_text("utf-8")
-        file_content_json: dict = json.loads(file_content)
-
-        self.behavior = file_content_json["behaviour"]  # type: ignore
         try:
+            file_content = self.settings_file_path.read_text("utf-8")
+            file_content_json: dict = json.loads(file_content)
+
+            self.personality = Personalities.find_by_title(file_content_json["personality"])
             self.tokens = file_content_json["tokens"]
         except:
-            self.tokens = 1000
+            # Force set of defaults.
+            self.save()
+            pass
 
     def add_message(self, role: str, content: str):
         """
@@ -89,9 +96,8 @@ class ChatUser:
         self.messages_file_path.write_text(serialized_messages, "utf-8")
         
         settings = {
-            "behaviour":self.behavior,
+            "personality":self.personality.title,
             "tokens":self.tokens
-
         }
 
         serialized_settings = json.dumps(settings,ensure_ascii=False,indent=2)

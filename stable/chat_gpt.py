@@ -1,14 +1,15 @@
-import openai
-import urllib.request
-import time
+from behaviors import Personality
 
+import re
+
+import openai
 openai.api_key = "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"
 
-def chatGPT(user_message, behaviour, previous_messages=[]):
+def chatGPT(user_message: str, personality: Personality, previous_messages = []) -> str:
     start_messages = [
         {
             "role": "system",
-            "content": behaviour
+            "content": personality.behaviour
         }
     ]
     user_messages = [
@@ -23,24 +24,23 @@ def chatGPT(user_message, behaviour, previous_messages=[]):
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0301",
         messages=messages,
-        temperature=0.5
+        temperature=personality.temperature
     )
 
-    return completion.choices[0]["message"]["content"]
+    message = completion.choices[0]["message"]["content"] # type: ignore
 
-def get_image(message:str):
+    text_without_link = re.sub(r'\(.*?\)|https?://\S+', '', message)
+
+    return text_without_link
+
+def get_image(message: str) -> str:
     response = openai.Image.create(
         prompt=message + ". Using modern technologies of photo illustration and have maximum details in the backround and foreground.",
         n=1,
         size="256x256"
     )
 
-    image_url = response['data'][0]['url']
-
-    # image_name = str(time.time())+"-image.png"
-
-    # urllib.request.urlretrieve(image_url, "./images/" + image_name)
-    
+    image_url = response['data'][0]['url'] # type: ignore
     return image_url
 
     

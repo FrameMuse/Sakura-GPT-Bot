@@ -2,7 +2,7 @@ from telebot import types
 
 import re
 
-from behaviors import Behaviors
+from behaviors import Personalities
 
 from chat_user import ChatUser
 from chat_gpt import chatGPT
@@ -12,29 +12,31 @@ from chat_gpt import get_image
 last_message = []
 
 def get_avaliable_behaviours():
-    behaviors_dict = {}
-    for behavior in Behaviors.__dict__:
-        if not behavior.startswith('__') and behavior != "get_names":
-            behaviors_dict[Behaviors.__dict__[behavior].name] = Behaviors.__dict__[behavior]
+    personalities_dict = {}
+    for property in Personalities.__dict__:
+        if not property.startswith('__') and property != "get_names" and property != "find" and property != "find_by_title":
+            personality = Personalities.find(property)
+            personalities_dict[personality.title] = personality.behaviour
 
-    return behaviors_dict
+    return personalities_dict
 
 
-def on_behaviour_change(message,chat_user: ChatUser,bot,behaviors_dict):
-    chat_user.behavior = behaviors_dict[message.text].behaviour
+def on_behaviour_change(message, chat_user: ChatUser, bot):
+    chat_user.personality = Personalities.find_by_title(message.text)
+    chat_user.personality.behaviour += " Человека с которым ты общаешься зовут " + message.from_user.first_name
+
     bot.send_chat_action(message.chat.id, "typing")
     chat_user.clear_message_history()
-    message_content = chatGPT("Привет!", chat_user.behavior + " Человека с которым ты общаешься зовут " + message.from_user.first_name , chat_user.messages)
+    message_content = chatGPT("Привет!", chat_user.personality, chat_user.messages)
+
+    image_pattern = r"\!\[(.*?)\]"
+    message_content = re.sub(image_pattern, "", message_content)
     
     bot.send_message(message.chat.id, message_content)
-    
-    # Charge tokens for changing behavior.
-    chat_user.tokens -= 5
-    chat_user.save()
 
 
 def start_command(message,bot):
-    behaviors_list = Behaviors.get_names()
+    behaviors_list = Personalities.get_names()
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=4)
     buttons = [types.KeyboardButton(name) for name in behaviors_list]
     buttons.append(types.KeyboardButton("👤 Профиль"))
@@ -43,8 +45,8 @@ def start_command(message,bot):
     bot.send_message(message.chat.id, "Привет, я чат-бот Sakura! Я могу вести с тобой диалог, и понимать контекст сказанного тобой!", reply_markup=markup)
 
 
-def on_profile_button(message,bot,chat_user):
-    menu_text = "🌸 Ваш профиль:\n\n🔮 Ваше имя: " + message.from_user.first_name + "\n💰 Ваш баланс токенов: " + str(chat_user.tokens) + "\n📀 Выбранный образ: 🌸 [issue #1]"
+def on_profile_button(message,bot,chat_user: ChatUser):
+    menu_text = "🌸 Ваш профиль:\n\n🔮 Ваше имя: " + message.from_user.first_name + "\n💰 Ваш баланс токенов: " + str(chat_user.tokens) + f"\n📀 Выбранный образ: {chat_user.personality.title}"
     donate_button = types.InlineKeyboardButton(text='🍩 Пополнить баланс', callback_data='donate')
     keyboard = types.InlineKeyboardMarkup()
     keyboard.add(donate_button)
@@ -52,26 +54,33 @@ def on_profile_button(message,bot,chat_user):
     bot.send_message(message.chat.id, menu_text, reply_markup=keyboard)
 
 
-def text(message,bot,chat_user):
-    image_url = None
-    
+def text(message, bot, chat_user: ChatUser):
     bot.send_chat_action(message.chat.id, "typing")
-    message_content = chatGPT(message.text, chat_user.behavior , chat_user.messages)
+    message_content = chatGPT(message.text, chat_user.personality , chat_user.messages)
+    chat_user.tokens -= int(len(message.text)/0.75)
+    chat_user.save()
 
-    result = re.search(r"\!\[(.*?)\]", message_content)
+
+    image_url = None
+    image_pattern = r"\!\[(.*?)\]"
+    
+    result = re.search(image_pattern, message_content)
 
     if result:
         image_description = result.group(1)
         image_url = get_image(image_description)
 
-        message_content = message_content.replace(f'![{result.group(1)}]', "")
+        message_content = re.sub(image_pattern, "", message_content)
 
-    bot.send_message(message.chat.id, message_content,)
+    bot.send_message(message.chat.id, message_content)
 
-    if not image_url:
+    if image_url != None:
         bot.send_photo(message.chat.id,photo=image_url)
+    
 
-    chat_user.tokens -= int(len(message.text)/0.75)
+
     chat_user.add_message("user",message.text)
     chat_user.add_message("assistant",message_content)
     chat_user.save()
+
+print(get_avaliable_behaviours())

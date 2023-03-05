@@ -4,7 +4,7 @@ import time
 
 openai.api_key = "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"
 
-def chatGPT(user_message, behaviour, previous_messages=[] ):
+def chatGPT(user_message, behaviour, previous_messages=[]):
     start_messages = [
         {
             "role": "system",
@@ -23,14 +23,14 @@ def chatGPT(user_message, behaviour, previous_messages=[] ):
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0301",
         messages=messages,
-        temperature=1
+        temperature=0.5
     )
 
     return completion.choices[0]["message"]["content"]
 
 def get_image(message:str):
     response = openai.Image.create(
-        prompt=message + ". It should be 3D, using modern technologies of photo illustration and have maximum details in the backround and foreground.",
+        prompt=message + ". Using modern technologies of photo illustration and have maximum details in the backround and foreground.",
         n=1,
         size="256x256"
     )

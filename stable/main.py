@@ -4,21 +4,30 @@ import openai
 import telebot
 from telebot import types
 
+import openai
+
 import re
 
 from behaviors import Behaviors
 
+from goods import Goods, Good
+
 from chat_user import ChatUser
 from chat_gpt import chatGPT
 from chat_gpt import get_image
+
+from text_functions import get_avaliable_behaviours,on_behaviour_change,on_profile_button,text
+
 from voice import collect_garbage, ogg_to_wav, recognize, text_to_speech
 
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
 token = os.environ.get("TELEGRAM_KEY")
+TELEGRAM_INVOICE_PROVIDER_TOKEN = os.environ.get("TELEGRAM_INVOICE_PROVIDER_TOKEN")
 
 bot = telebot.TeleBot(str(token))
 
@@ -26,90 +35,84 @@ last_message = []
 
 regex = r"\[image description: (.*?)]"
 
+
+
 @bot.message_handler(commands=["start"])
 def start_command(message):
 
     behaviors_list = Behaviors.get_names()
     
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=3)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=4)
     buttons = [types.KeyboardButton(name) for name in behaviors_list]
-    
+    buttons.append(types.KeyboardButton("👤 Профиль"))
     markup.add(*buttons)
 
     bot.send_message(message.chat.id, "Привет, я чат-бот Sakura! Я могу вести с тобой диалог, и понимать контекст сказанного тобой!", reply_markup=markup)
 
+@bot.pre_checkout_query_handler(func=lambda call: True)
+def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
+    # Отправляем запрос на проверку счета
+    print(pre_checkout_query.order_info)
+    bot.answer_pre_checkout_query(int(pre_checkout_query.id), ok=True)
 
-@bot.message_handler(commands=["image"])
-def image_command(message):
-    response = openai.Image.create(
-        prompt=message.text,
-        n=1,
-        size="1024x1024"
-    )
 
-    image_url = response['data'][0]['url']
 
-    bot.send_message(message.chat.id, image_url)
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback_query(call: types.CallbackQuery):
+    if call.data.startswith("buy_tokens:"):
+        option = call.data.replace("buy_tokens:", "")
+        good: Good = Goods.Tokens.__dict__["option" + option]
+
+        good_description = f'🌸Счёт на оплату токенов.\n\nПосле оплаты, вы получите {good.quantity} токенов'
+        good_price = types.LabeledPrice(str(good.price), good.price * 100)
+
+        if not TELEGRAM_INVOICE_PROVIDER_TOKEN:
+            return
+
+        bot.send_invoice(
+            call.message.chat.id,
+            title='Счёт',
+            description=good_description, 
+            invoice_payload=str(good.quantity),
+            provider_token=TELEGRAM_INVOICE_PROVIDER_TOKEN,
+            currency=good.currency,
+            prices=[good_price]
+        )
+        bot.answer_callback_query(callback_query_id=call.id)
+
+    if call.data == "donate":
+        keyboard = types.InlineKeyboardMarkup()
+        button1 = types.InlineKeyboardButton(text=str(Goods.Tokens.option1),callback_data="buy_tokens:1")
+        button2 = types.InlineKeyboardButton(text=str(Goods.Tokens.option2),callback_data="buy_tokens:2")
+        button3 = types.InlineKeyboardButton(text=str(Goods.Tokens.option3),callback_data="buy_tokens:3")
+        for button in [button1, button2, button3]:
+            keyboard.add(button)
+
+        message_content = """ 
+        🌸Вот список моих товаров.\n\n📖 Выберите подходящий для вас вариант:
+        """
+        bot.send_message(call.message.chat.id, message_content, reply_markup=keyboard)
+        bot.answer_callback_query(callback_query_id=call.id)
 
 
 @bot.message_handler(content_types=["text"])
-def text(message):
-    url = "none"
+def texts(message):
+    image_url = "none"
     chat_user = ChatUser(message.from_user.id)
     chat_user.restore_message_history()
     chat_user.restore_settings()
     
-
-    behaviors_dict = {}
-    for behavior in Behaviors.__dict__:
-        if not behavior.startswith('__') and behavior != "get_names":
-            behaviors_dict[Behaviors.__dict__[behavior].name] = Behaviors.__dict__[behavior]
-
+    if message.text == "👤 Профиль":
+       on_profile_button(message,bot,chat_user)
+       return
+    
+    behaviors_dict = get_avaliable_behaviours()
+   
     if message.text in behaviors_dict:
-        chat_user.behavior = behaviors_dict[message.text].behaviour
-        bot.send_chat_action(message.chat.id, "typing")
-        chat_user.clear_message_history()
-        message_content = chatGPT("Привет!", chat_user.behavior + " Человека с которым ты общаешься зовут " + message.from_user.first_name , chat_user.messages)
-        result = re.search(r"\[image description: (.*?)\]", message_content)
-
-
-        if result:
-            image_description = result.group(1)
-            print(image_description)
-            url = get_image(image_description)
-            message_content = message_content.replace("[image description: " + result.group(1) + "]", "")
-        else:
-            print("No image description found.")
-        
-        bot.send_message(message.chat.id, message_content)
-        
-        chat_user.save()
+        on_behaviour_change(message,chat_user,bot,behaviors_dict)
         return
 
-    bot.send_chat_action(message.chat.id, "typing")
-    message_content = chatGPT(message.text, chat_user.behavior , chat_user.messages)
-
-    result = re.search(r"\[image description: (.*?)\]", message_content)
-
-
-    if result:
-        image_description = result.group(1)
-        print(image_description)
-        url = get_image(image_description)
-        message_content = message_content.replace("[image description: " + result.group(1) + "]", "")
-    else:
-        print("No image description found.")
-
-    sent_message = bot.send_message(message.chat.id, message_content,)
-
-    if url != "none":
-        bot.send_photo(message.chat.id,photo=url)
-
-    last_message.append(sent_message)
-
-    chat_user.add_message("user",message.text)
-    chat_user.add_message("assistant",message_content)
-    chat_user.save()
+    text(message,bot,chat_user)
 
 
 @bot.edited_message_handler(func=lambda message: True)
@@ -163,6 +166,37 @@ def voice(message):
     chat_user.save()
     collect_garbage([file_name, file_name.replace(
         ".ogg", ".wav"), speech_file_name])
+
+@bot.message_handler(commands=["image"])
+def image_command(message):
+    try:
+        response = openai.Image.create(
+            prompt=message.text,
+            n=1,
+            size="1024x1024"
+        )
+    except openai.error.InvalidRequestError:  # type: ignore
+        bot.send_message(message.chat.id, "*****, нельзя такое")
+        return
+
+    image_url = response['data'][0]['url']  # type: ignore
+
+    bot.send_message(message.chat.id, image_url)
+
+@bot.message_handler(content_types=['successful_payment'])
+def got_payment(message):
+    tokens = int(message.successful_payment.invoice_payload)
+    
+    image_link = get_image("Anime girl Sakura, the most cutest. Icon for telegram with a background.")
+        
+    bot.send_message(message.chat.id, f'🌸 Аввввррр, спасибо мой дорогой друг!\n\nНа твой баланс токенов было зачислено {tokens} токенов!')
+    bot.send_photo(message.chat.id, photo=image_link)
+
+    chat_user = ChatUser(message.from_user.id)
+    chat_user.restore_settings()
+
+    chat_user.tokens += tokens
+    chat_user.save()
 
 
 bot.infinity_polling()

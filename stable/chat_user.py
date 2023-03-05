@@ -14,11 +14,15 @@ class ChatUser:
     behavior: str
     settings_file_path: Path
 
+    tokens: int
+
     def __init__(self, user_id: int):
         self.user_id = user_id
         self.behavior = Behaviors.Sakura.behaviour
         self.user_storage_path = Path("user-data/" + str(user_id))
         self.user_storage_path.parent.mkdir(exist_ok=True, parents=True)
+
+        self.tokens = 500
 
         self.messages = []
         self.messages_file_path = Path(
@@ -56,6 +60,10 @@ class ChatUser:
         file_content_json: dict = json.loads(file_content)
 
         self.behavior = file_content_json["behaviour"]  # type: ignore
+        try:
+            self.tokens = file_content_json["tokens"]
+        except:
+            self.tokens = 1000
 
     def add_message(self, role: str, content: str):
         """
@@ -81,7 +89,9 @@ class ChatUser:
         self.messages_file_path.write_text(serialized_messages, "utf-8")
         
         settings = {
-            "behaviour":self.behavior
+            "behaviour":self.behavior,
+            "tokens":self.tokens
+
         }
 
         serialized_settings = json.dumps(settings,ensure_ascii=False,indent=2)

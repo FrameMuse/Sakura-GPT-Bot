@@ -3,3 +3,4 @@
 .env
 /staled
 __pycache__
+user-data

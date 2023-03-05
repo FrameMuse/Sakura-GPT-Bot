@@ -39,6 +39,13 @@ async def on_ready():
 async def on_message(message):
     if message.author.bot:
         return
+    if message.content.startswith("!q"):
+        return
+    if message.content.startswith("!c"):
+        chat_user = ChatUser(message.channel.id)
+        chat_user.clear_message_history()
+        chat_user.save()
+        return
 
     chat_user = ChatUser(message.channel.id)
     chat_user.restore_message_history()

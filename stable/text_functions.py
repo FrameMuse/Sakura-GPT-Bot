@@ -53,12 +53,7 @@ def on_profile_button(message,bot,chat_user):
 
 
 def text(message,bot,chat_user):
-    image_url = "none"
-
-    if chat_user.tokens < int(len(message.text)/0.75):
-        bot.send_message(message.chat.id, "Уууппс, у тебя недостаточно токенов для отправки сообщения! Твой баланс токенов равен: "+str(chat_user.tokens),)
-        chat_user.save()
-        return
+    image_url = None
     
     bot.send_chat_action(message.chat.id, "typing")
     message_content = chatGPT(message.text, chat_user.behavior , chat_user.messages)
@@ -73,7 +68,7 @@ def text(message,bot,chat_user):
 
     bot.send_message(message.chat.id, message_content,)
 
-    if image_url != "none":
+    if not image_url:
         bot.send_photo(message.chat.id,photo=image_url)
 
     chat_user.tokens -= int(len(message.text)/0.75)

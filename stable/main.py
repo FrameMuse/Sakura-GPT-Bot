@@ -97,22 +97,32 @@ def handle_callback_query(call: types.CallbackQuery):
 
 @bot.message_handler(content_types=["text"])
 def texts(message):
-    image_url = "none"
     chat_user = ChatUser(message.from_user.id)
     chat_user.restore_message_history()
     chat_user.restore_settings()
-    
+
     if message.text == "👤 Профиль":
        on_profile_button(message,bot,chat_user)
        return
     
-    behaviors_dict = get_avaliable_behaviours()
-   
-    if message.text in behaviors_dict:
-        on_behaviour_change(message,chat_user,bot,behaviors_dict)
+    
+
+    if chat_user.tokens < int(len(message.text)/0.75):
+        bot.send_message(message.chat.id, "Уууппс, у тебя недостаточно токенов для отправки сообщения! Твой баланс токенов равен: "+str(chat_user.tokens))
+        chat_user.save()
         return
 
-    text(message,bot,chat_user)
+    if chat_user.tokens <= 0:
+        text("", bot, chat_user)
+        return
+
+    behaviors_dict = get_avaliable_behaviours()
+    if message.text in behaviors_dict:
+        on_behaviour_change(message,chat_user, bot, behaviors_dict)
+        return
+    
+
+    text(message, bot, chat_user)
 
 
 @bot.edited_message_handler(func=lambda message: True)
@@ -186,17 +196,19 @@ def image_command(message):
 @bot.message_handler(content_types=['successful_payment'])
 def got_payment(message):
     tokens = int(message.successful_payment.invoice_payload)
-    
-    image_link = get_image("Anime girl Sakura, the most cutest. Icon for telegram with a background.")
-        
-    bot.send_message(message.chat.id, f'🌸 Аввввррр, спасибо мой дорогой друг!\n\nНа твой баланс токенов было зачислено {tokens} токенов!')
-    bot.send_photo(message.chat.id, photo=image_link)
 
     chat_user = ChatUser(message.from_user.id)
     chat_user.restore_settings()
 
     chat_user.tokens += tokens
     chat_user.save()
+    
+
+    image_link = get_image("Anime girl Sakura, the most cutest. Icon for telegram with a background.")
+    
+    bot.send_message(message.chat.id, f'🌸 Аввввррр, спасибо мой дорогой друг!\n\nНа твой баланс токенов было зачислено {tokens} токенов!')
+    bot.send_photo(message.chat.id, photo=image_link)
+
 
 
 bot.infinity_polling()

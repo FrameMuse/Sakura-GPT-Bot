@@ -2,12 +2,21 @@ from telebot import types
 
 import re
 
+from time import time
+
 from behaviors import Personalities
 
 from chat_user import ChatUser
 from chat_gpt import chatGPT
 from chat_gpt import get_image
 
+
+def log(text, role, user_id ,filename="logs.txt"):
+    with open(filename, 'a') as file:
+        if role == "Bot":
+            file.write("<" + str(time()) + " " + role + " " + str(user_id) + "> "+text + '\n\n')
+        else:
+            file.write("<" + str(time()) + " " + role + " " + str(user_id) + "> "+text + '\n')
 
 last_message = []
 
@@ -37,14 +46,14 @@ def on_behaviour_change(message, chat_user: ChatUser, bot):
     bot.send_message(message.chat.id, message_content)
 
 
-def start_command(message,bot):
-    behaviors_list = Personalities.get_names()
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=4)
-    buttons = [types.KeyboardButton(name) for name in behaviors_list]
-    buttons.append(types.KeyboardButton("👤 Профиль"))
-    markup.add(*buttons)
+# def start_command(message,bot):
+#     behaviors_list = Personalities.get_names()
+#     markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=4)
+#     buttons = [types.KeyboardButton(name) for name in behaviors_list]
+#     buttons.append(types.KeyboardButton("👤 Профиль"))
+#     markup.add(*buttons)
 
-    bot.send_message(message.chat.id, "Привет, я чат-бот Sakura! Я могу вести с тобой диалог, и понимать контекст сказанного тобой!", reply_markup=markup)
+#     bot.send_message(message.chat.id, "Привет, я чат-бот Sakura! Я могу вести с тобой диалог, и понимать контекст сказанного тобой!", reply_markup=markup)
 
 
 def on_profile_button(message,bot,chat_user: ChatUser):
@@ -57,8 +66,10 @@ def on_profile_button(message,bot,chat_user: ChatUser):
 
 
 def text(message, bot, chat_user: ChatUser):
+    log(message.text,"User",chat_user.user_id)
     bot.send_chat_action(message.chat.id, "typing")
     message_content = chatGPT(message.text, chat_user.personality , chat_user.messages)
+    log(message_content,"Bot",chat_user.user_id)
     chat_user.tokens -= int(len(message.text)/0.75)
     chat_user.save()
 
@@ -79,10 +90,13 @@ def text(message, bot, chat_user: ChatUser):
     if image_url != None:
         bot.send_photo(message.chat.id,photo=image_url)
     
-
+    
+    
 
     chat_user.add_message("user",message.text)
     chat_user.add_message("assistant",message_content)
     chat_user.save()
+
+
 
 print(get_avaliable_behaviours())

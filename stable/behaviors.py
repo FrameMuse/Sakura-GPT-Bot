@@ -19,15 +19,16 @@ class Personalities:
     @staticmethod
     def get_names() -> "list[str]":
         behaviors_list = []
-        for behavior in Personalities.__dict__:
-            if not behavior.startswith("__") and behavior != "get_names" and behavior != "find" and behavior != "find_by_title":
-                behaviors_list.append(behavior)
+        for property in Personalities.__dict__:
+            if not property.startswith("__") and property != "get_names" and property != "find" and property != "find_by_title":
+                personality = Personalities.find(property)
+                behaviors_list.append(personality.title)
         return behaviors_list
 
     @staticmethod
-    def find(class_name: str) -> Personality:
-        if class_name in Personalities.__dict__:
-            return Personalities.__dict__[class_name].__func__()
+    def find(property: str) -> Personality:
+        if property in Personalities.__dict__:
+            return Personalities.__dict__[property].__func__()
 
         return Personalities.Sakura()
 

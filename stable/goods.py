@@ -10,6 +10,6 @@ class Good:
 
 class Goods:
     class Tokens:
-        option1 = Good(75, "Токенов", 69, "RUB")
-        option2 = Good(750, "Токенов", 299, "RUB")
-        option3 = Good(1500, "Токенов", 499, "RUB")
+        option1 = Good(300, "Токенов", 69, "RUB")
+        option2 = Good(1500, "Токенов", 299, "RUB")
+        option3 = Good(3750, "Токенов", 499, "RUB")

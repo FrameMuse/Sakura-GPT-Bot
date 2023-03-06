@@ -1,5 +1,6 @@
 import time
 
+from placeholders import Placeholders
 import openai
 import telebot
 from telebot import types
@@ -47,7 +48,7 @@ def start_command(message):
     buttons.append(types.KeyboardButton("👤 Профиль"))
     markup.add(*buttons)
 
-    bot.send_message(message.chat.id, "Привет, я чат-бот Sakura! Я могу вести с тобой диалог, и понимать контекст сказанного тобой!", reply_markup=markup)
+    bot.send_message(message.chat.id, Placeholders.START_MESSAGE , reply_markup=markup)
 
 @bot.pre_checkout_query_handler(func=lambda call: True)
 def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):

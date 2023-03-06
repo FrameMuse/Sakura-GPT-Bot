@@ -4,3 +4,4 @@
 /staled
 __pycache__
 user-data
+*.txt

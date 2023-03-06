@@ -22,6 +22,8 @@ from discord.ext import commands
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
 
+white_list = ["akaipureya","framemuse"]
+channel_list = [883733235471892510,1081318059781914735]
 
 discord_intents = discord.Intents.all()
 discord_intents.members = True
@@ -45,6 +47,9 @@ async def on_message(message):
         chat_user = ChatUser(message.channel.id)
         chat_user.clear_message_history()
         chat_user.save()
+        return
+    # print(type(message.channel.id))
+    if message.channel.id not in channel_list or message.author.name.lower() not in white_list :
         return
 
     chat_user = ChatUser(message.channel.id)

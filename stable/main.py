@@ -17,6 +17,8 @@ from chat_user import ChatUser
 from chat_gpt import chatGPT
 from chat_gpt import get_image
 
+from logger import log_purchase
+
 from text_functions import get_avaliable_behaviours,on_behaviour_change,on_profile_button,text
 
 from voice import collect_garbage, ogg_to_wav, recognize, text_to_speech
@@ -199,6 +201,7 @@ def got_payment(message):
     chat_user.tokens += tokens
     chat_user.save()
     
+    log_purchase(chat_user,tokens)
 
     image_link = get_image("Anime girl Sakura, the most cutest. Icon for telegram with a background.")
     

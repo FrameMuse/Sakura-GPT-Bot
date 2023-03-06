@@ -7,17 +7,12 @@ from telebot import types
 
 import openai
 
-import re
-
 from behaviors import Personalities
 
 from goods import Goods, Good
 
 from chat_user import ChatUser
 from chat_gpt import chatGPT
-from chat_gpt import get_image
-
-from logger import log_purchase
 
 from text_functions import get_avaliable_behaviours,on_behaviour_change,on_profile_button,text
 
@@ -26,11 +21,12 @@ from voice import collect_garbage, ogg_to_wav, recognize, text_to_speech
 from dotenv import load_dotenv
 import os
 
+from payment import create_payment
+
 
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
-token = os.environ.get("TELEGRAM_KEY")
-TELEGRAM_INVOICE_PROVIDER_TOKEN = os.environ.get("TELEGRAM_INVOICE_PROVIDER_TOKEN")
+token = os.environ.get("TELEGRAM_KEY_TEST")
 
 bot = telebot.TeleBot(str(token))
 
@@ -42,6 +38,11 @@ regex = r"\[image description: (.*?)]"
 
 @bot.message_handler(commands=["start"])
 def start_command(message):
+    chat_user = ChatUser(message.from_user.username, message.from_user.id)
+    chat_user.restore_settings()
+    chat_user.user_chat_id = message.chat.id
+    chat_user.save()
+
 
     behaviors_list = Personalities.get_names()
     
@@ -52,42 +53,36 @@ def start_command(message):
 
     bot.send_message(message.chat.id, Placeholders.START_MESSAGE , reply_markup=markup)
 
-@bot.pre_checkout_query_handler(func=lambda call: True)
-def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
-    # Отправляем запрос на проверку счета
-    # print(pre_checkout_query.order_info)
-    bot.answer_pre_checkout_query(int(pre_checkout_query.id), ok=True)
-
-
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callback_query(call: types.CallbackQuery):
     if call.data.startswith("buy_tokens:"):
         option = call.data.replace("buy_tokens:", "")
+
         good: Good = Goods.Tokens.__dict__["option" + option]
-
         good_description = f'🌸Счёт на оплату токенов.\n\nПосле оплаты, вы получите {good.quantity} токенов'
-        good_price = types.LabeledPrice(str(good.price), good.price * 100)
 
-        if not TELEGRAM_INVOICE_PROVIDER_TOKEN:
-            return
+        chat_user = ChatUser(call.from_user.username, call.from_user.id)
+        chat_user.restore_settings()
 
-        bot.send_invoice(
-            call.message.chat.id,
-            title='Счёт',
-            description=good_description, 
-            invoice_payload=str(good.quantity),
-            provider_token=TELEGRAM_INVOICE_PROVIDER_TOKEN,
-            currency=good.currency,
-            prices=[good_price]
-        )
+        # TODO: CREATE_PAYMENT
+        payment = create_payment(good, chat_user)
+        if not payment["confirmation"]:
+            raise ValueError("No 'confirmation' in 'payment'.")
+        
+        button_pay = types.InlineKeyboardButton(text=f"Оплатить {good.price} {good.currency}", url=payment["confirmation"]["confirmation_url"])
+
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(button_pay)
+
+        bot.send_message(call.message.chat.id, good_description, reply_markup=keyboard)
         bot.answer_callback_query(callback_query_id=call.id)
 
     if call.data == "donate":
         keyboard = types.InlineKeyboardMarkup()
-        button1 = types.InlineKeyboardButton(text=str(Goods.Tokens.option1),callback_data="buy_tokens:1")
-        button2 = types.InlineKeyboardButton(text=str(Goods.Tokens.option2),callback_data="buy_tokens:2")
-        button3 = types.InlineKeyboardButton(text=str(Goods.Tokens.option3),callback_data="buy_tokens:3")
+        button1 = types.InlineKeyboardButton(text=str(Goods.Tokens.option1), callback_data="buy_tokens:1")
+        button2 = types.InlineKeyboardButton(text=str(Goods.Tokens.option2), callback_data="buy_tokens:2")
+        button3 = types.InlineKeyboardButton(text=str(Goods.Tokens.option3), callback_data="buy_tokens:3")
         for button in [button1, button2, button3]:
             keyboard.add(button)
 
@@ -191,24 +186,5 @@ def voice(message):
     chat_user.save()
     collect_garbage([file_name, file_name.replace(
         ".ogg", ".wav"), speech_file_name])
-
-
-@bot.message_handler(content_types=['successful_payment'])
-def got_payment(message):
-    tokens = int(message.successful_payment.invoice_payload)
-
-    chat_user = ChatUser(message.from_user.username, message.from_user.id)
-    chat_user.restore_settings()
-
-    chat_user.tokens += tokens
-    chat_user.save()
-    
-    log_purchase(chat_user,tokens)
-
-    image_link = get_image("Anime girl Sakura, the most cutest. Icon for telegram with a background.")
-    
-    bot.send_message(message.chat.id, f'🌸 Аввввррр, спасибо мой дорогой друг!\n\nНа твой баланс токенов было зачислено {tokens} токенов!')
-    bot.send_photo(message.chat.id, photo=image_link)
-
 
 bot.infinity_polling()

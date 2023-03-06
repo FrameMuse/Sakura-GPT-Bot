@@ -13,8 +13,9 @@ c.execute('''CREATE TABLE IF NOT EXISTS payments
               user_id INTEGER,
               user_name TEXT,
               status TEXT,
+              tokens INTEGER,
               created_at INTEGER,
-              payment_at INTEGER)''')
+              updated_at INTEGER)''')
 
 # Сохраняем изменения в базе данных
 conn.commit()

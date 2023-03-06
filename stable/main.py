@@ -98,7 +98,7 @@ def handle_callback_query(call: types.CallbackQuery):
 
 @bot.message_handler(content_types=["text"])
 def texts(message):
-    chat_user = ChatUser(message.from_user.id)
+    chat_user = ChatUser(message.from_user.username,message.from_user.id)
     chat_user.restore_message_history()
     chat_user.restore_settings()
 
@@ -123,7 +123,7 @@ def texts(message):
 
 @bot.edited_message_handler(func=lambda message: True)
 def edit_text(message):
-    chat_user = ChatUser(message.from_user.id)
+    chat_user = ChatUser(message.from_user.username, message.from_user.id)
     chat_user.restore_message_history()
 
     bot.send_chat_action(message.chat.id, "typing")
@@ -135,7 +135,7 @@ def edit_text(message):
 
 @bot.message_handler(content_types=["voice"])
 def voice(message):
-    chat_user = ChatUser(message.from_user.id)
+    chat_user = ChatUser(message.from_user.username,message.from_user.id)
     chat_user.restore_message_history()
     
     # display "typing" status bar
@@ -193,7 +193,7 @@ def image_command(message):
 def got_payment(message):
     tokens = int(message.successful_payment.invoice_payload)
 
-    chat_user = ChatUser(message.from_user.id)
+    chat_user = ChatUser(message.from_user.username, message.from_user.id)
     chat_user.restore_settings()
 
     chat_user.tokens += tokens

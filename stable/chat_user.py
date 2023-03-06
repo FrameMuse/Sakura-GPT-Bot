@@ -6,6 +6,7 @@ from behaviors import Personality, Personalities
 
 class ChatUser:
     user_id: int
+    user_name: str
     user_storage_path: Path
 
     messages_file_path: Path
@@ -17,9 +18,10 @@ class ChatUser:
     tokens: int
     
 
-    def __init__(self, user_id: int):
+    def __init__(self, user_name: str , user_id: int):
         self.user_id = user_id
         self.user_storage_path = Path("user-data/" + str(user_id))
+        self.user_name = user_name
         self.user_storage_path.parent.mkdir(exist_ok=True, parents=True)
 
         self.messages = []
@@ -67,6 +69,7 @@ class ChatUser:
 
             self.personality = Personalities.find_by_title(file_content_json["personality"])
             self.tokens = file_content_json["tokens"]
+            self.user_name = file_content_json["user_name"]
         except:
             # Force set of defaults.
             self.save()
@@ -97,7 +100,8 @@ class ChatUser:
         
         settings = {
             "personality":self.personality.title,
-            "tokens":self.tokens
+            "tokens":self.tokens,
+            "user_name":self.user_name
         }
 
         serialized_settings = json.dumps(settings,ensure_ascii=False,indent=2)

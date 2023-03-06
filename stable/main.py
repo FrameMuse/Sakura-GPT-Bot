@@ -98,21 +98,21 @@ def handle_callback_query(call: types.CallbackQuery):
         bot.answer_callback_query(callback_query_id=call.id)
 
 
-@bot.message_handler(commands=["image"])
-def image_command(message):
-    try:
-        response = openai.Image.create(
-            prompt=message.text,
-            n=1,
-            size="1024x1024"
-        )
-    except openai.error.InvalidRequestError:  # type: ignore
-        bot.send_message(message.chat.id, "*****, нельзя такое")
-        return
+# @bot.message_handler(commands=["image"])
+# def image_command(message):
+#     try:
+#         response = openai.Image.create(
+#             prompt=message.text,
+#             n=1,
+#             size="1024x1024"
+#         )
+#     except openai.error.InvalidRequestError:  # type: ignore
+#         bot.send_message(message.chat.id, "*****, нельзя такое")
+#         return
 
-    image_url = response['data'][0]['url']  # type: ignore
+#     image_url = response['data'][0]['url']  # type: ignore
 
-    bot.send_message(message.chat.id, image_url)
+#     bot.send_message(message.chat.id, image_url)
 
 
 @bot.message_handler(content_types=["text"])

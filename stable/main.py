@@ -98,6 +98,23 @@ def handle_callback_query(call: types.CallbackQuery):
         bot.answer_callback_query(callback_query_id=call.id)
 
 
+@bot.message_handler(commands=["image"])
+def image_command(message):
+    try:
+        response = openai.Image.create(
+            prompt=message.text,
+            n=1,
+            size="1024x1024"
+        )
+    except openai.error.InvalidRequestError:  # type: ignore
+        bot.send_message(message.chat.id, "*****, нельзя такое")
+        return
+
+    image_url = response['data'][0]['url']  # type: ignore
+
+    bot.send_message(message.chat.id, image_url)
+
+
 @bot.message_handler(content_types=["text"])
 def texts(message):
     chat_user = ChatUser(message.from_user.username,message.from_user.id)
@@ -175,21 +192,6 @@ def voice(message):
     collect_garbage([file_name, file_name.replace(
         ".ogg", ".wav"), speech_file_name])
 
-@bot.message_handler(commands=["image"])
-def image_command(message):
-    try:
-        response = openai.Image.create(
-            prompt=message.text,
-            n=1,
-            size="1024x1024"
-        )
-    except openai.error.InvalidRequestError:  # type: ignore
-        bot.send_message(message.chat.id, "*****, нельзя такое")
-        return
-
-    image_url = response['data'][0]['url']  # type: ignore
-
-    bot.send_message(message.chat.id, image_url)
 
 @bot.message_handler(content_types=['successful_payment'])
 def got_payment(message):
@@ -207,7 +209,6 @@ def got_payment(message):
     
     bot.send_message(message.chat.id, f'🌸 Аввввррр, спасибо мой дорогой друг!\n\nНа твой баланс токенов было зачислено {tokens} токенов!')
     bot.send_photo(message.chat.id, photo=image_link)
-
 
 
 bot.infinity_polling()

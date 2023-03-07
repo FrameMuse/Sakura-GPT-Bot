@@ -32,7 +32,7 @@ def chatGPT(user_message: str, personality: Personality, previous_messages = [])
     )
 
     message = completion.choices[0]["message"]["content"] # type: ignore
-    message_filtered = RestrictedWords.replace(message, "")
+    message_filtered = RestrictedWords.replace(message)
 
     text_without_link = re.sub(r'\(.*?\)|https?://\S+', '', message_filtered)
     return text_without_link

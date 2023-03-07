@@ -1,8 +1,13 @@
 *.json
 *.png
+*.mp4
+*.ogg
+*.wav
+
 .env
-/staled
 __pycache__
 user-data
-*.txt
+
 *.db
+**/logs/*.txt
+

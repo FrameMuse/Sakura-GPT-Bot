@@ -1,10 +1,13 @@
 *.json
 *.png
+*.mp4
+*.ogg
+*.wav
+
 .env
-/staled
 __pycache__
 user-data
-*.txt
-*.db
-
 ssl
+*.db
+**/logs/*.txt
+

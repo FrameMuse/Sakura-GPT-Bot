@@ -7,6 +7,7 @@ from behaviors import Personality, Personalities
 class ChatUser:
     user_id: int
     user_name: str
+    user_chat_id: int
     user_storage_path: Path
 
     messages_file_path: Path
@@ -32,6 +33,8 @@ class ChatUser:
         self.settings_file_path = Path(
             self.user_storage_path.as_posix() + "/settings.json")
         self.settings_file_path.parent.mkdir(exist_ok=True, parents=True)
+
+        self.user_chat_id = -1
 
         # Default personality.
         self.personality = Personalities.Sakura()
@@ -70,6 +73,7 @@ class ChatUser:
             self.personality = Personalities.find_by_title(file_content_json["personality"])
             self.tokens = file_content_json["tokens"]
             self.user_name = file_content_json["user_name"]
+            self.user_chat_id = file_content_json["user_chat_id"]
         except:
             # Force set of defaults.
             self.save()
@@ -91,6 +95,13 @@ class ChatUser:
 
     def clear_message_history(self):
         self.messages = []
+    
+    @staticmethod
+    def update_chat_id(user_id: int, chat_id: int):
+        chat_user = ChatUser("", user_id)
+        chat_user.restore_settings()
+        chat_user.user_chat_id = chat_id
+        chat_user.save()
 
     def save(self):
         """Saves user data on disk."""
@@ -101,7 +112,8 @@ class ChatUser:
         settings = {
             "personality":self.personality.title,
             "tokens":self.tokens,
-            "user_name":self.user_name
+            "user_name":self.user_name,
+            "user_chat_id":self.user_chat_id,
         }
 
         serialized_settings = json.dumps(settings,ensure_ascii=False,indent=2)

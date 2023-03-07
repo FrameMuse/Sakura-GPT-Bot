@@ -7,7 +7,7 @@
 .env
 __pycache__
 user-data
-
+ssl
 *.db
 **/logs/*.txt
 

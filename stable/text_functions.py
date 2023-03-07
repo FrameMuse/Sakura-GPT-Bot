@@ -90,7 +90,3 @@ def text(message, bot, chat_user: ChatUser):
     chat_user.add_message("user",message.text)
     chat_user.add_message("assistant",message_content)
     chat_user.save()
-
-
-
-print(get_avaliable_behaviours())

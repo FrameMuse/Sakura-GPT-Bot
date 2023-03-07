@@ -26,7 +26,7 @@ from payment import create_payment
 
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
-token = os.environ.get("TELEGRAM_KEY_TEST")
+token = os.environ.get("TELEGRAM_KEY")
 
 bot = telebot.TeleBot(str(token))
 

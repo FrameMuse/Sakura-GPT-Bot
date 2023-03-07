@@ -16,7 +16,7 @@ load_dotenv()
 Configuration.account_id = os.environ.get("YOOKASSA_ACCOUNT_ID")
 Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY")
 
-token = os.environ.get("TELEGRAM_KEY_TEST")
+token = os.environ.get("TELEGRAM_KEY")
 bot = telebot.TeleBot(str(token))
 
 
@@ -28,7 +28,7 @@ def create_payment(good: Good, chat_user: ChatUser):
         },
         "confirmation": {
             "type": "redirect",
-        "return_url": "https://t.me/sakuraGPTbot"
+            "return_url": "https://t.me/sakuraGPTbot"
         },
         "capture": True,
         "description": str(good)

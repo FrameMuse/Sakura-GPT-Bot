@@ -26,7 +26,7 @@ from payment import create_payment
 
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
-token = os.environ.get("TELEGRAM_KEY")
+token = os.environ.get("TELEGRAM_KEY_TEST")
 
 bot = telebot.TeleBot(str(token))
 
@@ -35,14 +35,9 @@ last_message = []
 regex = r"\[image description: (.*?)]"
 
 
-
 @bot.message_handler(commands=["start"])
 def start_command(message):
-    chat_user = ChatUser(message.from_user.username, message.from_user.id)
-    chat_user.restore_settings()
-    chat_user.user_chat_id = message.chat.id
-    chat_user.save()
-
+    ChatUser.update_chat_id(message.from_user.id, message.chat.id)
 
     behaviors_list = Personalities.get_names()
     
@@ -56,6 +51,8 @@ def start_command(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callback_query(call: types.CallbackQuery):
+    ChatUser.update_chat_id(call.from_user.id, call.message.chat.id)
+    
     if call.data.startswith("buy_tokens:"):
         option = call.data.replace("buy_tokens:", "")
 
@@ -112,6 +109,8 @@ def handle_callback_query(call: types.CallbackQuery):
 
 @bot.message_handler(content_types=["text"])
 def texts(message):
+    ChatUser.update_chat_id(message.from_user.id, message.chat.id)
+    
     chat_user = ChatUser(message.from_user.username,message.from_user.id)
     chat_user.restore_message_history()
     chat_user.restore_settings()
@@ -149,6 +148,8 @@ def edit_text(message):
 
 @bot.message_handler(content_types=["voice"])
 def voice(message):
+    ChatUser.update_chat_id(message.from_user.id, message.chat.id)
+    
     chat_user = ChatUser(message.from_user.username,message.from_user.id)
     chat_user.restore_message_history()
     

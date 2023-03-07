@@ -95,6 +95,13 @@ class ChatUser:
 
     def clear_message_history(self):
         self.messages = []
+    
+    @staticmethod
+    def update_chat_id(user_id: int, chat_id: int):
+        chat_user = ChatUser("", user_id)
+        chat_user.restore_settings()
+        chat_user.user_chat_id = chat_id
+        chat_user.save()
 
     def save(self):
         """Saves user data on disk."""

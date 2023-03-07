@@ -13,11 +13,17 @@ class RestrictedWords:
         "faggot",
 
         "хуй",
+        "хуё",
         "нахуй",
+        "еби",
+        "ебал",
+        "проеб",
         "пизда",
         "пиздец",
         "еблан",
         "уёбише",
+        "блят",
+        "бляд",
         "блять",
         "ебать",
         "блядь",
@@ -70,44 +76,43 @@ class RestrictedWords:
         "пидр",
         "пидарас",
     ]
+    pattern = r".*?|".join(words)
+
+    exceptions = [
+        "застрахуй"
+    ]
 
     @staticmethod
     def replace(text: str, replacement: str = "*") -> str:
-        words: list[str] = re.findall(r"\w+", text, re.UNICODE)
-        for word in words:
-            word = word.lower()
+        for word in RestrictedWords.words:
+            text = re.sub(word + r"\w*", replacement * len(word), text, flags = re.IGNORECASE + re.UNICODE)
             
-            if word in RestrictedWords.words:
-                text = text.replace(word, replacement * len(word))
-                break
-            
-            parsed_word = morph_analyzer.parse(word)[0]
-            if str(parsed_word.normal_form).lower() in RestrictedWords.words: # type: ignore
-                text = text.replace(word, replacement * len(word))
-        
+            word_base_form = morph_analyzer.parse(word)[0].normal_form # type: ignore
+            text = text.replace(word_base_form, replacement * len(word))
+
         return text
 
     @staticmethod
     def presence(text: str) -> bool:
-        words: list[str] = re.findall(r"\w+", text, re.UNICODE)
-        for word in words:
-            word = word.lower()
+        words: list[str] = re.findall(RestrictedWords.pattern + r"|\w+", text, re.IGNORECASE + re.UNICODE)
 
+        for word in words:
             if word in RestrictedWords.words:
                 return True
             
-            parsed_word = morph_analyzer.parse(word)[0]
-            if parsed_word.normal_form in RestrictedWords.words: # type: ignore
+            word_base_form = morph_analyzer.parse(word)[0].normal_form # type: ignore
+            if word_base_form in RestrictedWords.words: 
                 return True
             
         return False
 
+# Пример использования
+text = "Застрахуй Любят Это блядское сообщение содержит матерные слова, пиздато такие как пошла Пиздапроёбина пиздАпроЕбина, гавна есть тут моча и жапо."
 
-# # Пример использования
-# text = "Это сообщение содержит матерные слова, такие как пошла пидр."
+contains = RestrictedWords.presence(text)
+print(contains)
 
-# contains = RestrictedWords.presence(text)
-# print(contains)
+filterted_text = RestrictedWords.replace(text)
+print(filterted_text)
 
-# filterted_text = RestrictedWords.replace(text)
-# print(filterted_text)
+# print(morph_analyzer.parse("гавна")[0].normal_form)

@@ -10,6 +10,8 @@ class ChatUser:
     user_chat_id: int
     user_storage_path: Path
 
+    activated_promocodes: "list[str]"
+
     messages_file_path: Path
     settings_file_path: Path
 
@@ -35,6 +37,8 @@ class ChatUser:
         self.settings_file_path.parent.mkdir(exist_ok=True, parents=True)
 
         self.user_chat_id = -1
+
+        self.activated_promocodes = []
 
         # Default personality.
         self.personality = Personalities.Sakura()
@@ -74,6 +78,7 @@ class ChatUser:
             self.tokens = file_content_json["tokens"]
             self.user_name = file_content_json["user_name"]
             self.user_chat_id = file_content_json["user_chat_id"]
+            self.activated_promocodes = file_content_json["activated_promocodes"]
         except:
             # Force set of defaults.
             self.save()
@@ -114,6 +119,7 @@ class ChatUser:
             "tokens":self.tokens,
             "user_name":self.user_name,
             "user_chat_id":self.user_chat_id,
+            "activated_promocodes":self.activated_promocodes,
         }
 
         serialized_settings = json.dumps(settings,ensure_ascii=False,indent=2)

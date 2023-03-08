@@ -23,10 +23,11 @@ import os
 
 from payment import create_payment
 
+from promocodes import activate_promocode
 
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
-token = os.environ.get("TELEGRAM_KEY_TEST")
+token = os.environ.get("TELEGRAM_KEY")
 
 bot = telebot.TeleBot(str(token))
 
@@ -47,6 +48,27 @@ def start_command(message):
     markup.add(*buttons)
 
     bot.send_message(message.chat.id, Placeholders.START_MESSAGE , reply_markup=markup)
+
+
+@bot.message_handler(commands=["promo"])
+def promo_command(message:types.Message):
+
+    chat_user = ChatUser("",message.from_user.id)
+    chat_user.restore_settings()
+
+    if str(message.text).split(" ")[1] in chat_user.activated_promocodes:
+        bot.send_message(message.chat.id, "Данный промокод уже был активирован" )
+        return
+
+    tokens = activate_promocode(str(message.text).split(" ")[1], message.from_user.id)
+
+    print(message.text)
+
+    if not tokens:
+        bot.send_message(message.chat.id, "Данного промокода не существует" )
+        return
+
+    bot.send_message(message.chat.id, "Вы успешно активировали промокод на " + str(tokens) + " токенов" )
 
 
 @bot.callback_query_handler(func=lambda call: True)

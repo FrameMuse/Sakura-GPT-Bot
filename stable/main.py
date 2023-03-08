@@ -16,6 +16,8 @@ from goods import Goods, Good
 from chat_user import ChatUser
 from chat_gpt import chatGPT
 
+from db.repositories.promocodes import PromocodesRepository
+
 from text_functions import get_avaliable_behaviours,on_behaviour_change,on_profile_button,text
 
 from voice import collect_garbage, ogg_to_wav, recognize, text_to_speech
@@ -50,6 +52,22 @@ def start_command(message):
     markup.add(*buttons)
 
     bot.send_message(message.chat.id, Placeholders.START_MESSAGE , reply_markup=markup)
+
+
+@bot.message_handler(commands=["add_promo"])
+def add_promo_command(message:types.Message):
+    if message.from_user.id != 494405580:
+        return
+    
+    repository = PromocodesRepository()
+
+    try:
+        repository.add(str(message.text).split(" ")[1],int(str(message.text).split(" ")[2]))
+        bot.send_message(message.chat.id,"Succesfully added promocode!")
+        return
+    except Exception as error:
+        bot.send_message(message.chat.id,"Error occured while adding promocode!")
+        return
 
 
 @bot.message_handler(commands=["promo"])

@@ -53,8 +53,10 @@ def on_behaviour_change(message, chat_user: ChatUser, bot):
 def on_profile_button(message,bot,chat_user: ChatUser):
     menu_text = "🌸 Ваш профиль:\n\n🔮 Ваше имя: " + message.from_user.first_name + "\n💰 Ваш баланс токенов: " + str(chat_user.tokens) + f"\n📀 Выбранный образ: {chat_user.personality.title}"
     donate_button = types.InlineKeyboardButton(text='🍩 Пополнить баланс', callback_data='donate')
+    daily_button = types.InlineKeyboardButton(text='🗓️ Ежедневные токены', callback_data='daily')
     keyboard = types.InlineKeyboardMarkup()
     keyboard.add(donate_button)
+    keyboard.add(daily_button)
 
     bot.send_message(message.chat.id, menu_text, reply_markup=keyboard)
 

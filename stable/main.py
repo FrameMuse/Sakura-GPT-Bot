@@ -9,6 +9,8 @@ import openai
 
 from behaviors import Personalities
 
+from daily import get_daily
+
 from goods import Goods, Good
 
 from chat_user import ChatUser
@@ -75,6 +77,19 @@ def promo_command(message:types.Message):
 def handle_callback_query(call: types.CallbackQuery):
     ChatUser.update_chat_id(call.from_user.id, call.message.chat.id)
     
+    if call.data == "daily":
+        tokens = get_daily(call.from_user.id)
+
+        if not tokens:
+            bot.send_message(call.message.chat.id, "Сегодня вы уже получили ежедневные токены")
+            bot.answer_callback_query(callback_query_id=call.id)
+            return
+
+        bot.send_message(call.message.chat.id, "На счет зачислено " + str(tokens) + " токенов!")
+        bot.answer_callback_query(callback_query_id=call.id)
+        return
+
+
     if call.data.startswith("buy_tokens:"):
         option = call.data.replace("buy_tokens:", "")
 

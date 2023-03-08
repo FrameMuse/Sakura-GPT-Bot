@@ -49,7 +49,7 @@ class ChatUser:
         # Default personality.
         self.personality = Personalities.Sakura()
         # Default tokens.
-        self.tokens = 1000
+        self.tokens = 500
 
     def restore_message_history(self):
         """
@@ -64,7 +64,7 @@ class ChatUser:
         file_content = self.messages_file_path.read_text("utf-8")
         file_content_json: list = json.loads(file_content)
 
-        self.messages = file_content_json  # type: ignore
+        self.messages = file_content_json[-6:]
 
     def restore_settings(self):
         """
@@ -118,7 +118,7 @@ class ChatUser:
     def save(self):
         """Saves user data on disk."""
 
-        serialized_messages = json.dumps(self.messages[-6:],ensure_ascii=False,indent=2)
+        serialized_messages = json.dumps(self.messages, ensure_ascii=False, indent=2)
         self.messages_file_path.write_text(serialized_messages, "utf-8")
         
 

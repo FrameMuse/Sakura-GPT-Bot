@@ -8,7 +8,7 @@ from telebot import types
 import openai
 
 from behaviors import Personalities
-
+from threading import Thread
 from daily import get_daily
 
 from goods import Goods, Good
@@ -117,10 +117,12 @@ def handle_callback_query(call: types.CallbackQuery):
 
     if call.data == "donate":
         keyboard = types.InlineKeyboardMarkup()
+        button0 = types.InlineKeyboardButton(text=str(Goods.Tokens.option0), callback_data="buy_tokens:0")
         button1 = types.InlineKeyboardButton(text=str(Goods.Tokens.option1), callback_data="buy_tokens:1")
         button2 = types.InlineKeyboardButton(text=str(Goods.Tokens.option2), callback_data="buy_tokens:2")
         button3 = types.InlineKeyboardButton(text=str(Goods.Tokens.option3), callback_data="buy_tokens:3")
-        for button in [button1, button2, button3]:
+        
+        for button in [button0, button1, button2, button3]:
             keyboard.add(button)
 
         message_content = """ 
@@ -170,6 +172,7 @@ def texts(message):
         on_behaviour_change(message,chat_user, bot)
         return
     
+    # Thread(target=text,args=(message,bot,chat_user,)).start()
     
     text(message, bot, chat_user)
     
@@ -186,46 +189,46 @@ def edit_text(message):
                           message_id=last_message[-1].id, text=message_content)
 
 
-@bot.message_handler(content_types=["voice"])
-def voice(message):
-    ChatUser.update_chat_id(message.from_user.id, message.chat.id)
+# @bot.message_handler(content_types=["voice"])
+# def voice(message):
+#     ChatUser.update_chat_id(message.from_user.id, message.chat.id)
     
-    chat_user = ChatUser(message.from_user.username,message.from_user.id)
-    chat_user.restore_message_history()
+#     chat_user = ChatUser(message.from_user.username,message.from_user.id)
+#     chat_user.restore_message_history()
     
-    # display "typing" status bar
-    bot.send_chat_action(message.chat.id, "typing")
+#     # display "typing" status bar
+#     bot.send_chat_action(message.chat.id, "typing")
 
-    file_info = bot.get_file(message.voice.file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
+#     file_info = bot.get_file(message.voice.file_id)
+#     downloaded_file = bot.download_file(file_info.file_path)
 
-    file_name = str(time.time()) + "-voice.ogg"
-    with open(file_name, "wb") as new_file:
-        new_file.write(downloaded_file)
+#     file_name = str(time.time()) + "-voice.ogg"
+#     with open(file_name, "wb") as new_file:
+#         new_file.write(downloaded_file)
 
-    ogg_to_wav(file_name)
-    text = recognize(file_name.replace(".ogg", ".wav"))
-    chat_user.add_message("user",str(text))
+#     ogg_to_wav(file_name)
+#     text = recognize(file_name.replace(".ogg", ".wav"))
+#     chat_user.add_message("user",str(text))
     
-    sent_message = bot.send_message(message.chat.id, str(text))
+#     sent_message = bot.send_message(message.chat.id, str(text))
 
-    bot.send_chat_action(message.chat.id, "typing")
+#     bot.send_chat_action(message.chat.id, "typing")
 
-    message_content = chatGPT(text, chat_user.personality, chat_user.messages)
-    chat_user.add_message("assistant",message_content)
+#     message_content = chatGPT(text, chat_user.personality, chat_user.messages)
+#     chat_user.add_message("assistant",message_content)
 
-    bot.reply_to(sent_message, message_content)
+#     bot.reply_to(sent_message, message_content)
 
-    bot.send_chat_action(message.chat.id, "record_audio")
-    speech_file_name = text_to_speech(message_content)
-    speech_file = open(speech_file_name, "rb")
+#     bot.send_chat_action(message.chat.id, "record_audio")
+#     speech_file_name = text_to_speech(message_content)
+#     speech_file = open(speech_file_name, "rb")
 
-    bot.send_chat_action(message.chat.id, "upload_audio")
-    bot.send_voice(message.chat.id, speech_file,
-                   reply_to_message_id=sent_message.id)
+#     bot.send_chat_action(message.chat.id, "upload_audio")
+#     bot.send_voice(message.chat.id, speech_file,
+#                    reply_to_message_id=sent_message.id)
 
-    chat_user.save()
-    collect_garbage([file_name, file_name.replace(
-        ".ogg", ".wav"), speech_file_name])
+#     chat_user.save()
+#     collect_garbage([file_name, file_name.replace(
+#         ".ogg", ".wav"), speech_file_name])
 
 bot.infinity_polling()

@@ -22,7 +22,7 @@ from discord.ext import commands
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
 
-white_list = ["akaipureya","framemuse"]
+white_list = ["akaipureya","framemuse","kukushka","fckuloony"]
 channel_list = [883733235471892510,1081318059781914735]
 
 discord_intents = discord.Intents.all()

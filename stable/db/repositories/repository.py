@@ -28,14 +28,13 @@ class Repository:
         self.connection.commit()
 
     def get_by_id(self, id: int) -> Optional[Any]:
-        print(self.cursor.description)
         self.cursor.execute(f"""
             SELECT * FROM {self.table_name} WHERE id=?
         """, (id,))
 
         row = self.cursor.fetchone()
         if row:
-            return self._create_from_row(row)
+            return self._tuple_to_dict(row)
         
         return None
 
@@ -44,7 +43,7 @@ class Repository:
             SELECT * FROM {self.table_name}
         """)
         rows = self.cursor.fetchall()
-        return [self._create_from_row(row) for row in rows]
+        return [self._tuple_to_dict(row) for row in rows]
     
     def find_by_column(self, column:str, value:str):
         self.cursor.execute(f"""
@@ -60,7 +59,7 @@ class Repository:
         """, (id,))
         self.connection.commit()
 
-    def _create_from_row(self, row: Tuple[Any]) -> Any:
+    def _tuple_to_dict(self, row: Tuple[Any]) -> Any:
         item = type("Item", (object,), {})
         for i, col in enumerate(self.columns):
             setattr(item, col, row[i])

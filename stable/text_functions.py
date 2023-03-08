@@ -64,7 +64,14 @@ def on_profile_button(message,bot,chat_user: ChatUser):
 def text(message, bot, chat_user: ChatUser):
     log_text(message.text,chat_user,"User")
     bot.send_chat_action(message.chat.id, "typing")
-    message_content = chatGPT(message.text, chat_user.personality , chat_user.messages)
+    try:
+        message_content = chatGPT(message.text, chat_user.personality , chat_user.messages)
+        message_content.lower()
+        if len(message_content) > 4096:
+            raise Exception(":C")
+    except:
+        bot.send_message(message.chat.id, "⚙️ Не удалось синтезировать ответ.")
+        return
     log_text(message_content,chat_user)
     chat_user.tokens -= int(len(message.text)/0.75)
     chat_user.save()
@@ -75,9 +82,14 @@ def text(message, bot, chat_user: ChatUser):
     
     result = re.search(image_pattern, message_content)
 
+
     if result:
         image_description = result.group(1)
-        image_url = get_image(image_description)
+        try:
+            image_url = get_image(image_description)
+        except openai.error.InvalidRequestError:  # type: ignore
+            bot.send_message(message.chat.id, "⚙️ Не удалось сгенерировать изображение :C")
+            
 
         message_content = re.sub(image_pattern, "", message_content)
 

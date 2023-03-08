@@ -163,7 +163,11 @@ def texts(message):
     
 
     if chat_user.tokens < int(len(message.text)/0.75):
-        bot.send_message(message.chat.id, "Уууппс, у тебя недостаточно токенов для отправки сообщения! Твой баланс токенов равен: "+str(chat_user.tokens))
+        donate_button = types.InlineKeyboardButton(text='🍩 Пополнить баланс', callback_data='donate')
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(donate_button)
+        bot.send_message(message.chat.id, "Уууппс, у тебя недостаточно токенов для отправки сообщения! Твой баланс токенов равен: "+str(chat_user.tokens),reply_markup=keyboard)
+        
         chat_user.save()
         return
 

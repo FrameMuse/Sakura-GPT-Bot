@@ -12,6 +12,8 @@ class ChatUser:
 
     activated_promocodes: "list[str]"
 
+    last_daily: float
+
     messages_file_path: Path
     settings_file_path: Path
 
@@ -26,6 +28,8 @@ class ChatUser:
         self.user_storage_path = Path("user-data/" + str(user_id))
         self.user_name = user_name
         self.user_storage_path.parent.mkdir(exist_ok=True, parents=True)
+
+        self.last_daily = -1
 
         self.messages = []
         self.messages_file_path = Path(
@@ -79,6 +83,7 @@ class ChatUser:
             self.user_name = file_content_json["user_name"]
             self.user_chat_id = file_content_json["user_chat_id"]
             self.activated_promocodes = file_content_json["activated_promocodes"]
+            self.last_daily = file_content_json["last_daily"]
         except:
             # Force set of defaults.
             self.save()
@@ -120,6 +125,7 @@ class ChatUser:
             "user_name":self.user_name,
             "user_chat_id":self.user_chat_id,
             "activated_promocodes":self.activated_promocodes,
+            "last_daily":self.last_daily,
         }
 
         serialized_settings = json.dumps(settings,ensure_ascii=False,indent=2)

@@ -81,26 +81,25 @@ def text(message, bot, chat_user: ChatUser):
     image_pattern = r"\!\[(.*?)\]"
     
     result = re.search(image_pattern, message_content)
-
-
     if result:
         image_description = result.group(1)
         try:
             image_url = get_image(image_description)
+            chat_user.tokens -= 15 + int(len(image_description) / 5 / 0.75)
+            chat_user.save()
+
         except openai.error.InvalidRequestError:  # type: ignore
             bot.send_message(message.chat.id, "⚙️ Не удалось сгенерировать изображение :C")
             
-
+        # Change message_content if there is a link.
         message_content = re.sub(image_pattern, "", message_content)
+
+    chat_user.add_message("user",message.text)
+    chat_user.add_message("assistant",message_content)
+    chat_user.save()
 
     bot.send_message(message.chat.id, message_content)
 
     if image_url != None:
         bot.send_photo(message.chat.id,photo=image_url)
     
-    
-    
-
-    chat_user.add_message("user",message.text)
-    chat_user.add_message("assistant",message_content)
-    chat_user.save()

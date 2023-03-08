@@ -26,12 +26,30 @@ def create_payment(good: Good, chat_user: ChatUser):
             "value": good.price,
             "currency": good.currency
         },
+        # "receipt": {
+        #     "items":[
+        #         {
+        #             "description":"Покупка " + str(good.quantity) + " токенов",
+        #             "amount": {
+        #                 "value": good.price,
+        #                 "currency": good.currency
+        #             },
+        #             "vat_code":1,
+        #             "quantity":1
+        #         },
+            
+        #     ]
+        # },
         "confirmation": {
             "type": "redirect",
             "return_url": "https://t.me/sakuraGPTbot"
         },
         "capture": True,
-        "description": str(good)
+        "description": str(good),
+        # "metadata": {
+        #     "user_id": chat_user.user_id,
+        #     "user_name": chat_user.user_name,
+        # }
     }, uuid.uuid4())
 
     payment_data = json.loads(payment.json())

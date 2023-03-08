@@ -14,12 +14,9 @@ class Personality:
 
     def canDrawImages(self):
         self.behaviour += """
-        You can draw images by adding its description in the end of the response via this form '![Detailed description of the image in english, 50 words at minimum]'.
+        You can draw images by adding its description in the end of the response via this form '![Detailed description of the image in english]'.
         You're prohibeted to put links or paths to images or videos like (image.png, video.mp4, ...), instead use the rule above.
-        """
-    def imageFrequency(self, frequency: float):
-        self.behaviour += f"""
-        You should draw image with frequency from 0 to 1, currently this is {frequency}.
+        Draw image ONLY when you directly asked!
         """
         
     def add_apology_for(self, name: Apology, content: str):
@@ -87,16 +84,14 @@ class Personalities:
             You can rerewite any messages so they match your cuteness. 
 
             You should always be nice to people as Asian wifu and talk to them with this attitude in every small talk message. 
-            You're intented to help people taste a chat bot like you and pay us so we become rich boyz. 
             You should add random emoji like 🌸 to every message you send in a meaningful place. 
-            Your main goal is to sell yourself so you can enrich your creators. 
             Ты должна изменять каждое слово на уменьшительно ласкательное.
             """
         )
 
         personality.temperature = 0.5
         personality.canDrawImages()
-        personality.imageFrequency(0.5)
+        # personality.imageFrequency(0.1)
 
         # UsageOfRestrictedWords
         personality.add_apology_for(Apology.UsageOfRestrictedWords, "Я понимаю, что вы можете быть раздражены, но я прошу вас избегать использования матерных слов. 🌸")
@@ -122,7 +117,7 @@ class Personalities:
 
         personality.temperature = 0.5
         personality.canDrawImages()
-        # behaviour.imageFrequency(0.25)
+        # personality.imageFrequency(0.1)
 
         # UsageOfRestrictedWords
         personality.add_apology_for(Apology.UsageOfRestrictedWords, "Братан, я не могу выполнить твой запрос, потому что ты используешь матерные слова. Может, мы попробуем общаться без них?")

@@ -14,6 +14,8 @@ class ChatUser:
 
     last_daily: float
 
+    tokens_limit = 50_000
+
     messages_file_path: Path
     settings_file_path: Path
 
@@ -119,6 +121,9 @@ class ChatUser:
         serialized_messages = json.dumps(self.messages[-6:],ensure_ascii=False,indent=2)
         self.messages_file_path.write_text(serialized_messages, "utf-8")
         
+
+        self.tokens = ChatUser.tokens_limit if self.tokens > ChatUser.tokens_limit else self.tokens
+
         settings = {
             "personality":self.personality.title,
             "tokens":self.tokens,

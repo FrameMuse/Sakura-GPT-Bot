@@ -98,6 +98,9 @@ def handle_callback_query(call: types.CallbackQuery):
 
         chat_user = ChatUser(call.from_user.username, call.from_user.id)
         chat_user.restore_settings()
+        if chat_user.tokens + good.quantity > ChatUser.tokens_limit:
+            bot.answer_callback_query(callback_query_id=call.id)
+            return
 
         # TODO: CREATE_PAYMENT
         payment = create_payment(good, chat_user)

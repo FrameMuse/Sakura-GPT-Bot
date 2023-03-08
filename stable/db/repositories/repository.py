@@ -4,8 +4,8 @@ from typing import Any, Tuple, Optional
 
 class Repository:
     def __init__(self, table_name: str, columns: "dict[str, str]", db_path: str = "db/sql.db") -> None:
-        self.conn = sqlite3.connect(db_path)
-        self.cursor = self.conn.cursor()
+        self.connection = sqlite3.connect(db_path)
+        self.cursor = self.connection.cursor()
         self.table_name = table_name
         self.columns = columns
         self.create_table()
@@ -14,7 +14,7 @@ class Repository:
         columns_str = ", ".join([f"{col} {self.columns[col]}" for col in self.columns])
 
         self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {self.table_name} ({columns_str})")
-        self.conn.commit()
+        self.connection.commit()
 
     def add_row(self, item: "dict[str, Any]") -> None:
         columns_str = ", ".join([col for col in self.columns])
@@ -25,7 +25,7 @@ class Repository:
             INSERT INTO {self.table_name} ({columns_str})
             VALUES ({placeholders_str})
         """, values)
-        self.conn.commit()
+        self.connection.commit()
 
     def get_by_id(self, id: int) -> Optional[Any]:
         print(self.cursor.description)
@@ -45,12 +45,20 @@ class Repository:
         """)
         rows = self.cursor.fetchall()
         return [self._create_from_row(row) for row in rows]
+    
+    def find_by_column(self, column:str, value:str):
+        self.cursor.execute(f"""
+            SELECT * FROM {self.table_name} WHERE {column}='{value}'
+        """)
+        self.connection.commit()
+        row = self.cursor.fetchone()
+        return list(row) if row != None else None
 
     def delete_by_id(self, id: int) -> None:
         self.cursor.execute(f"""
             DELETE FROM {self.table_name} WHERE id=?
         """, (id,))
-        self.conn.commit()
+        self.connection.commit()
 
     def _create_from_row(self, row: Tuple[Any]) -> Any:
         item = type("Item", (object,), {})
@@ -62,4 +70,4 @@ class Repository:
         return str(datetime.utcnow())
 
     def close(self) -> None:
-        self.conn.close()
+        self.connection.close()

@@ -5,11 +5,16 @@ import json
 from yookassa.domain.notification import WebhookNotification
 
 from db_interface import DatabaseInterface, PaymentStatus
-
+import os
+from dotenv import load_dotenv
 from payment import on_success_payment
 
 app = Flask(__name__)
 sslify = SSLify(app)
+
+load_dotenv()
+WEBHOOK_ROUTE = str(os.environ.get("WEBHOOK_ROUTE"))
+
 
 def parse_payment(payload):
     # Cоздайте объект класса уведомлений в зависимости от события
@@ -29,7 +34,7 @@ def parse_payment(payload):
 
 
 
-@app.route('/payment-e4808a6e-a824-45fe-a43a-adb43c050054', methods=['POST'])
+@app.route(WEBHOOK_ROUTE, methods=['POST'])
 def webhook():
     payment = parse_payment(request.data)
     if not payment:
@@ -63,7 +68,8 @@ if __name__ == '__main__':
     app.run(
         port=443,
         host="95.163.236.117",
-        ssl_context=('ssl/certificate.crt', 'ssl/private.key')
+        ssl_context=('ssl/certificate.crt', 'ssl/private.key'),
+        # debug=True
     )
 
 

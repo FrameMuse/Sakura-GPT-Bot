@@ -38,6 +38,6 @@ class Promocodes(PromocodesRepository):
     def find(self, code: str):
         self = PromocodesRepository()
         promocode = self.find(code)
-        self._close()
+        self.close()
 
         return promocode

@@ -1,10 +1,9 @@
 import os
 
-from user import User
+from user import User, USER_DATA_DIRECTORY
 from db.repositories.openai_usage import OpenAIUsageRepository
 
-# specify the parent directory that contains the folders with settings.json files
-parent_dir = "user-data"
+
 
 def get_users_data_total(ngt_tokens: int = 25_000):
     # initialize a variable to store the total tokens
@@ -13,7 +12,7 @@ def get_users_data_total(ngt_tokens: int = 25_000):
     total_users_daily = 0
 
     # loop through all subdirectories in the parent directory
-    for user_dir in os.listdir(parent_dir):
+    for user_dir in os.listdir(USER_DATA_DIRECTORY):
         user = User(int(user_dir))
        
         if user.balance.amount > ngt_tokens:

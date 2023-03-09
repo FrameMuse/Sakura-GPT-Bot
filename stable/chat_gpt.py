@@ -1,5 +1,5 @@
 from restricted_words import RestrictedWords
-from stable.personalities import Personality, Apology
+from personalities import Personality, Apology
 from db.repositories.openai_usage import OpenAIUsageRepository
 
 import re
@@ -45,7 +45,7 @@ def chatGPT(prompt: str, personality: Personality, previous_messages = []) -> st
     # Save information about usage.
     repository = OpenAIUsageRepository()
     repository.add(repository.Type.TEXT, model, prompt, message)
-    repository._close()
+    repository.close()
 
     # Process the message.
     message_filtered = RestrictedWords.replace(message)
@@ -69,7 +69,7 @@ def get_image(prompt: str):
      # Save information about usage.
     repository = OpenAIUsageRepository()
     repository.add(repository.Type.IMAGE, "dall-e")
-    repository._close()
+    repository.close()
 
     image_url: str = response['data'][0]['url'] # type: ignore
     return image_url

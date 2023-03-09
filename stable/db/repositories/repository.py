@@ -68,5 +68,5 @@ class Repository:
     def _timestamp(self):
         return str(datetime.utcnow())
 
-    def _close(self) -> None:
+    def close(self) -> None:
         self.connection.close()

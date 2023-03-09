@@ -5,17 +5,17 @@ class Serializable:
         self.__fields_map = fields_map
         self._fields = fields_map.keys()
     
+    # def represents(self):
+    #     return self
+
     def _toJSON(self):
-        def filter_fields(cls) -> dict:          
-            if self != cls:
-                return cls.__dict__
-            
+        def filter_fields(cls):          
             fields = {}
             for key in self._fields:
                 fields[key] = str(cls.__dict__.get(key, ""))
             return fields
         
-        return json.dumps(self, default=filter_fields, indent=4)
+        return json.dumps(self, default=filter_fields, indent=4, ensure_ascii=False)
 
     def _assign(self, fields: dict):
         for key, value in fields.items():

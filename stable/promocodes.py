@@ -1,21 +1,43 @@
+import json
+
+from pyee.twisted import TwistedEventEmitter
+
 from db.repositories.promocodes import PromocodesRepository
-from chat_user import ChatUser
 
 
-def activate_promocode(code:str,user_id:int):
-    chat_user = ChatUser("",user_id)
-    chat_user.restore_settings()
+class Promocodes(PromocodesRepository):
+    def __init__(self, applied: "list[str] | str" = []):
+        if isinstance(applied, list):
+            self.__applied: "list[str]" = applied
+        if isinstance(applied, str):
+            self.__applied: "list[str]" = json.loads(applied)
 
-    repository = PromocodesRepository()
-    promocode = repository.find(code)
-    repository.close()
+        self.__events = TwistedEventEmitter()
 
-    if promocode == None:
-        return None
+    def __str__(self) -> str:
+        return json.dumps(self.__applied, sort_keys=True)
+
+    def apply(self, code: str) -> bool:
+        """
+        Returns False if promocode doesn't exist.
+        """
+        promocode = self.find(code)
+        if not promocode: return False
+        
+        self.__applied.append(promocode.code)
+        self.__events.emit("applied", promocode.tokens)
+
+        return True
     
-    chat_user.tokens += promocode[2]
-    chat_user.activated_promocodes.append(code)
-    chat_user.save()
+    def applied(self, code: str) -> bool:
+        return code in self.__applied
+    
+    def on_applied(self, callback):
+        self.__events.on("applied", callback)
+        
+    def find(self, code: str):
+        self = PromocodesRepository()
+        promocode = self.find(code)
+        self._close()
 
-    return promocode[2]
- 
+        return promocode

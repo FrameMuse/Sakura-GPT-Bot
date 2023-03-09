@@ -8,7 +8,7 @@ from goods import Good, Goods
 from yookassa import Configuration, Payment
 from yookassa.domain.response import PaymentResponse
 
-from chat_user import ChatUser
+from user import User
 from db_interface import DatabaseInterface
 
 load_dotenv()
@@ -20,36 +20,22 @@ token = os.environ.get("TELEGRAM_KEY")
 bot = telebot.TeleBot(str(token))
 
 
-def create_payment(good: Good, chat_user: ChatUser):
+def create_payment(user: User, good: Good):
     payment = Payment.create({
         "amount": {
             "value": good.price,
             "currency": good.currency
         },
-        # "receipt": {
-        #     "items":[
-        #         {
-        #             "description":"Покупка " + str(good.quantity) + " токенов",
-        #             "amount": {
-        #                 "value": good.price,
-        #                 "currency": good.currency
-        #             },
-        #             "vat_code":1,
-        #             "quantity":1
-        #         },
-            
-        #     ]
-        # },
         "confirmation": {
             "type": "redirect",
             "return_url": "https://t.me/sakuraGPTbot"
         },
         "capture": True,
         "description": str(good),
-        # "metadata": {
-        #     "user_id": chat_user.user_id,
-        #     "user_name": chat_user.user_name,
-        # }
+        "metadata": {
+            "user_id": user.id,
+            "first_name": user.first_name,
+        }
     }, uuid.uuid4())
 
     payment_data = json.loads(payment.json())
@@ -57,28 +43,23 @@ def create_payment(good: Good, chat_user: ChatUser):
     db = DatabaseInterface()
 
 
-    db.create_payment(payment_data["id"], chat_user.user_id, chat_user.user_name, good)
+    db.create_payment(payment_data["id"], user.id, user.username, good)
     db.close()
 
     return json.loads(payment.json())
 
-def on_success_payment(user_name: str, user_id: int, tokens: int):
-    chat_user = ChatUser(user_name, user_id)
-    chat_user.restore_settings()
-    chat_user.tokens += tokens
-    chat_user.save()
-
+def on_success_payment(user: User, credited_tokens: int):
     message = f"""
     🌸 Аввввррр, спасибо мой дорогой друг!
     
-    На твой баланс токенов было зачислено {tokens} токенов!
-    Теперь у тебя {chat_user.tokens} токеньчиков! ❤️
+    На твой баланс токенов было зачислено {credited_tokens} токенов!
+    Теперь у тебя {user.balance} токеньчиков! ❤️
     """
 
-    bot.send_message(chat_user.user_chat_id, message)
+    bot.send_message(user.id, message)
 
-# chat_user = ChatUser("name",565324826)
-# url = create_payment(Goods.Tokens.option3,chat_user)
+# user = User("name",565324826)
+# url = create_payment(Goods.Tokens.option3,user)
 
 # print(url)
 

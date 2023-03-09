@@ -1,20 +1,26 @@
-from chat_user import ChatUser
 from time import time
+from pyee.twisted import TwistedEventEmitter
 
-# TODO: add consts
+DAILY_TOKENS = 100
+DAILY_PREDIOD = 1 * 60 * 60 * 24
 
-def get_daily(user_id:int):
 
-    chat_user = ChatUser("",user_id)
-    chat_user.restore_settings()
+class DailyTokens:
+    def __init__(self, last_daily: "float | str" = -1):
+        self.__last_daily = float(last_daily)
+        self.__events = TwistedEventEmitter()
 
-    daily_tokens = 100
+    def __str__(self) -> str:
+        return str(self.__last_daily)
 
-    if time() - chat_user.last_daily > 3600*24:
-        chat_user.tokens+=daily_tokens
-        chat_user.last_daily = time()
-        chat_user.save()
-    else:
-        return None
+    def obtain(self):
+        self.__last_daily = time()
+        self.__events.emit("obtained", DAILY_TOKENS)
+
+        return DAILY_TOKENS
     
-    return daily_tokens
+    def on_obtain(self, callback):
+        self.__events.on("obtained", callback)
+
+    def available(self) -> bool:
+        return time() - self.__last_daily > DAILY_PREDIOD

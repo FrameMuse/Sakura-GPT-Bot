@@ -1,12 +1,11 @@
+from telebot import TeleBot
 from telebot import types
 
 import re
 
-from time import time
+from personalities import Personalities
 
-from behaviors import Personalities
-
-from chat_user import ChatUser
+from user import User
 from chat_gpt import chatGPT
 from chat_gpt import get_image
 
@@ -14,92 +13,83 @@ from logger import log_text
 
 last_message = []
 
-def get_avaliable_behaviours():
-    personalities_dict = {}
-    for property in Personalities.__dict__:
-        if not property.startswith('__') and property != "get_names" and property != "find" and property != "find_by_title":
-            personality = Personalities.find(property)
-            personalities_dict[personality.title] = personality.behaviour
 
-    return personalities_dict
-
-
-def on_behaviour_change(message, chat_user: ChatUser, bot):
-    chat_user.personality = Personalities.find_by_title(message.text)
-    chat_user.clear_message_history()
-    chat_user.save()
+def on_behaviour_change(bot: TeleBot, user: User, text: str):
+    user.personality = Personalities.find_by_title(text)
     # Modify behaviour.
-    chat_user.personality.behaviour += " Человека с которым ты общаешься зовут " + message.from_user.first_name
+    user.personality.behaviour += " Человека с которым ты общаешься зовут " + user.first_name
 
-    bot.send_chat_action(message.chat.id, "typing")
-    message_content = chatGPT("Привет!", chat_user.personality, chat_user.messages)
+    bot.send_chat_action(user.id, "typing")
+    message_content = chatGPT("Привет!", user.personality, user.message_history.get())
 
     image_pattern = r"\!\[(.*?)\]"
     message_content = re.sub(image_pattern, "", message_content)
     
-    bot.send_message(message.chat.id, message_content)
+    bot.send_message(user.id, message_content)
 
 
-# def start_command(message,bot):
-#     behaviors_list = Personalities.get_names()
-#     markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=4)
-#     buttons = [types.KeyboardButton(name) for name in behaviors_list]
-#     buttons.append(types.KeyboardButton("👤 Профиль"))
-#     markup.add(*buttons)
+def on_profile_button(bot: TeleBot, user: User):
+    menu_text = f"""
+🌸 Ваш профиль:
 
-#     bot.send_message(message.chat.id, "Привет, я чат-бот Sakura! Я могу вести с тобой диалог, и понимать контекст сказанного тобой!", reply_markup=markup)
+🔮 Ваше имя: {user.first_name}
+💰 Ваш баланс токенов: {str(user.balance)}
+📀 Выбранный образ: {user.personality.title}
+    """
 
+    donate_button = types.InlineKeyboardButton(text="🍩 Пополнить баланс", callback_data="donate")
+    daily_button = types.InlineKeyboardButton(text="🗓️ Ежедневные токены", callback_data="daily")
 
-def on_profile_button(message,bot,chat_user: ChatUser):
-    menu_text = "🌸 Ваш профиль:\n\n🔮 Ваше имя: " + message.from_user.first_name + "\n💰 Ваш баланс токенов: " + str(chat_user.tokens) + f"\n📀 Выбранный образ: {chat_user.personality.title}"
-    donate_button = types.InlineKeyboardButton(text='🍩 Пополнить баланс', callback_data='donate')
-    daily_button = types.InlineKeyboardButton(text='🗓️ Ежедневные токены', callback_data='daily')
     keyboard = types.InlineKeyboardMarkup()
     keyboard.add(donate_button)
     keyboard.add(daily_button)
 
-    bot.send_message(message.chat.id, menu_text, reply_markup=keyboard)
+    bot.send_message(user.id, menu_text, reply_markup=keyboard)
 
 
-def text(message, bot, chat_user: ChatUser):
-    log_text(message.text,chat_user,"User")
-    bot.send_chat_action(message.chat.id, "typing")
+def text(bot: TeleBot, user: User, user_message: str):
+    log_text(user_message, user, user.message_history.Role.USER)
+
+    bot.send_chat_action(user.id, "typing")
+
     try:
-        message_content = chatGPT(message.text, chat_user.personality , chat_user.messages)
-        message_content.lower()
-        if len(message_content) > 4096:
+        assistant_message = chatGPT(user_message, user.personality, user.message_history.get())
+        assistant_message.lower()
+        
+        if len(assistant_message) > 4096:
             raise Exception(":C")
     except:
-        bot.send_message(message.chat.id, "⚙️ Не удалось синтезировать ответ.")
+        bot.send_message(user.id, "⚙️ Не удалось синтезировать ответ.")
         return
-    log_text(message_content,chat_user)
-    chat_user.tokens -= int(len(message.text)/0.75)
-    chat_user.save()
+
+    log_text(assistant_message, user, user.message_history.Role.ASSISTANT)
+    user.balance.debit_chars(len(user_message))
 
 
     image_url = None
     image_pattern = r"\!\[(.*?)\]"
     
-    result = re.search(image_pattern, message_content)
+    result = re.search(image_pattern, assistant_message)
     if result:
         image_description = result.group(1)
+
         try:
             image_url = get_image(image_description)
-            chat_user.tokens -= 15 + int(len(image_description) / 5 / 0.75)
-            chat_user.save()
+
+            user.balance.debit(15)
+            user.balance.debit_chars(len(image_description) / 5)
 
         except openai.error.InvalidRequestError:  # type: ignore
-            bot.send_message(message.chat.id, "⚙️ Не удалось сгенерировать изображение :C")
+            bot.send_message(user.id, "⚙️ Не удалось сгенерировать изображение :C")
             
         # Change message_content if there is a link.
-        message_content = re.sub(image_pattern, "", message_content)
+        assistant_message = re.sub(image_pattern, "", assistant_message)
 
-    chat_user.add_message("user",message.text)
-    chat_user.add_message("assistant",message_content)
-    chat_user.save()
+    user.message_history.add(user.message_history.Role.USER,      user_message)
+    user.message_history.add(user.message_history.Role.ASSISTANT, assistant_message)
 
-    bot.send_message(message.chat.id, message_content)
+    bot.send_message(user.id, assistant_message)
 
     if image_url != None:
-        bot.send_photo(message.chat.id,photo=image_url)
+        bot.send_photo(user.id,photo=image_url)
     

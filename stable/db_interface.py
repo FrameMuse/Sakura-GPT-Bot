@@ -15,11 +15,11 @@ class DatabaseInterface:
         self.cursor = self.connection.cursor()
 
 
-    def create_payment(self, uuid, user_id, user_name, good: Good):
+    def create_payment(self, uuid, user_id, username, good: Good):
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
 
         self.cursor.execute('''INSERT INTO payments (uuid, user_id, user_name, status, tokens, created_at, updated_at)
-                          VALUES (?, ?, ?, ?, ?, ?, ?)''', (uuid, user_id, user_name, PaymentStatus.CREATED.name, good.quantity, timestamp, timestamp))
+                          VALUES (?, ?, ?, ?, ?, ?, ?)''', (uuid, user_id, username, PaymentStatus.CREATED.name, good.quantity, timestamp, timestamp))
         self.connection.commit()
 
 

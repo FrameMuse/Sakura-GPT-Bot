@@ -1,8 +1,6 @@
 import os
-import json
-from pathlib import Path
 
-from daily import get_daily
+from user import User
 from db.repositories.openai_usage import OpenAIUsageRepository
 
 # specify the parent directory that contains the folders with settings.json files
@@ -16,28 +14,15 @@ def get_users_data_total(ngt_tokens: int = 25_000):
 
     # loop through all subdirectories in the parent directory
     for user_dir in os.listdir(parent_dir):
-        # check if the subdirectory contains a settings.json file
-        settings_file = Path(parent_dir + "/" + user_dir + "/settings.json")
-        if not settings_file.is_file():
-            continue
-
-        settings_content = settings_file.read_text("utf-8")
-        settings_content_json: dict = json.loads(settings_content)
-
-        if "tokens" not in settings_content_json:
-            continue
-
-        # print(settings_content_json)
-
-        daily_tokens = get_daily(int(user_dir))
-        settings_tokens = settings_content_json["tokens"]
-        if settings_tokens > ngt_tokens:
+        user = User(int(user_dir))
+       
+        if user.balance.amount > ngt_tokens:
             continue
 
         total_users += 1
-        total_tokens += int(settings_tokens)
+        total_tokens += int(user.balance.amount)
 
-        if not daily_tokens:
+        if not user.daily_tokens.available():
             total_users_daily += 1
 
 
@@ -77,7 +62,7 @@ print(f"Users that already got daily tokens: {users_total[2]}")
 
 def get_requests():
     repository = OpenAIUsageRepository()
-    rows = repository.get_all()
+    rows = repository._get_all()
     
     texts = 0
     images = 0

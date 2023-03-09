@@ -1,5 +1,5 @@
 from restricted_words import RestrictedWords
-from behaviors import Personality, Apology
+from stable.personalities import Personality, Apology
 from db.repositories.openai_usage import OpenAIUsageRepository
 
 import re
@@ -11,7 +11,7 @@ import openai
 
 load_dotenv()
 
-openai.api_key = openai.api_key = os.environ.get("OPEN_AI_KEY")
+openai.api_key = os.environ.get("OPEN_AI_KEY")
 
 def chatGPT(prompt: str, personality: Personality, previous_messages = []) -> str:
     # Restrict using some words.
@@ -45,7 +45,7 @@ def chatGPT(prompt: str, personality: Personality, previous_messages = []) -> st
     # Save information about usage.
     repository = OpenAIUsageRepository()
     repository.add(repository.Type.TEXT, model, prompt, message)
-    repository.close()
+    repository._close()
 
     # Process the message.
     message_filtered = RestrictedWords.replace(message)
@@ -69,7 +69,7 @@ def get_image(prompt: str):
      # Save information about usage.
     repository = OpenAIUsageRepository()
     repository.add(repository.Type.IMAGE, "dall-e")
-    repository.close()
+    repository._close()
 
     image_url: str = response['data'][0]['url'] # type: ignore
     return image_url

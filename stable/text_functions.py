@@ -33,7 +33,7 @@ def on_profile_button(bot: TeleBot, user: User):
 🌸 Ваш профиль:
 
 🔮 Ваше имя: {user.first_name}
-💰 Ваш баланс токенов: {str(user.balance)}
+💰 Ваш баланс токенов: {str(int(user.balance.amount))}
 📀 Выбранный образ: {user.personality.title}
     """
 

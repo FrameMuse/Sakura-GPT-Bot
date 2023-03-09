@@ -30,8 +30,9 @@ regex = r"\[image description: (.*?)]"
 
 @bot.message_handler(commands=["start"])
 def start_command(message: types.Message):
+    User.from_telebot(message.from_user)
     personality_titles = Personalities.avaliable().keys()
-    
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True,row_width=4)
     buttons = [types.KeyboardButton(title) for title in personality_titles]
     buttons.append(types.KeyboardButton("👤 Профиль"))

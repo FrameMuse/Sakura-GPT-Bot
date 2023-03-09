@@ -1,6 +1,7 @@
 import telebot
 
 import os
+from dotenv import load_dotenv
 from pathlib import Path
 
 from tokens import Tokens
@@ -11,7 +12,9 @@ from messages_history import MessageHistory
 
 from serializable import Serializable
 
-USER_DATA_DIRECTORY = "/root/anus/stable/user-data"
+load_dotenv()
+
+USER_DATA_DIRECTORY = os.environ.get("USER_DATA_DIRECTORY")
 
 class User(Serializable):
     def __init__(self, id: int):

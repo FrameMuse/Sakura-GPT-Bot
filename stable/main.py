@@ -41,6 +41,22 @@ def start_command(message: types.Message):
     bot.send_message(message.chat.id, Placeholders.START_MESSAGE, reply_markup=markup)
 
 
+@bot.message_handler(commands=["add_promo"])
+def add_promo_command(message:types.Message):
+    if message.from_user.id != 494405580:
+        return
+    
+    repository = PromocodesRepository()
+
+    try:
+        repository.add(str(message.text).split(" ")[1],int(str(message.text).split(" ")[2]))
+        bot.send_message(message.chat.id,"Succesfully added promocode!")
+        return
+    except Exception as error:
+        bot.send_message(message.chat.id,"Error occured while adding promocode!")
+        return
+
+
 @bot.message_handler(commands=["promo"])
 def promo_command(message: types.Message):
     user = User.from_telebot(message.from_user)
@@ -131,10 +147,13 @@ def texts(message: types.Message):
        return
     
     if not user.balance.sufficient_chars(len(message.text)):
+        donate_button = types.InlineKeyboardButton(text='🍩 Пополнить баланс', callback_data='donate')
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(donate_button)
         bot.send_message(message.chat.id, f"""
 Уууппс, у тебя недостаточно токенов для отправки сообщения!
 Твой баланс токенов равен: {str(int(user.balance.amount))}
-""")
+""", reply_markup=keyboard)
         return
 
     if Personalities.has(message.text):

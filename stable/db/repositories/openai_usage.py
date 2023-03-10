@@ -21,11 +21,11 @@ class OpenAIUsageRepository(Repository):
         )
 
     def add(self, type: Type, model: str, prompt: str = "", response: str = "") -> None:
-        self.add_row({
+        self._add_row({
             "type": type.name,
             "model": model,
             "prompt_chars": len(prompt),
             "response_chars": len(response),
-            "created_at": self.timestamp()
+            "created_at": self._timestamp()
         })
 

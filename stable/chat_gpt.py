@@ -1,5 +1,5 @@
 from restricted_words import RestrictedWords
-from behaviors import Personality, Apology
+from personalities import Personality, Apology
 from db.repositories.openai_usage import OpenAIUsageRepository
 
 import re
@@ -11,7 +11,7 @@ import openai
 
 load_dotenv()
 
-openai.api_key = openai.api_key = os.environ.get("OPEN_AI_KEY")
+openai.api_key = os.environ.get("OPEN_AI_KEY")
 
 def chatGPT(prompt: str, personality: Personality, previous_messages = []) -> str:
     # Restrict using some words.

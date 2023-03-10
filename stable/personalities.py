@@ -12,6 +12,9 @@ class Personality:
 
         self.apologies: "dict[Apology, list[str]]" = {}
 
+    def __str__(self) -> str:
+        return str(self.title)
+
     def canDrawImages(self):
         self.behaviour += """
         You can draw images by adding its description in the end of the response via this form '![Detailed description of the image in english]'.
@@ -47,15 +50,19 @@ class Personality:
         return apology
 
 class Personalities:
+    @staticmethod
+    def avaliable():
+        personalities_dict = {}
+        for property in Personalities.__dict__:
+            if not property.startswith("__") and property != "avaliable" and property != "has" and property != "find" and property != "find_by_title":
+                personality = Personalities.find(property)
+                personalities_dict[personality.title] = personality.behaviour
+
+        return personalities_dict
 
     @staticmethod
-    def get_names() -> "list[str]":
-        behaviors_list = []
-        for property in Personalities.__dict__:
-            if not property.startswith("__") and property != "get_names" and property != "find" and property != "find_by_title":
-                personality = Personalities.find(property)
-                behaviors_list.append(personality.title)
-        return behaviors_list
+    def has(title: str) -> bool:
+        return title in Personalities.avaliable()
 
     @staticmethod
     def find(property: str) -> Personality:
@@ -67,7 +74,7 @@ class Personalities:
     @staticmethod
     def find_by_title(title: str) -> Personality:
         for property in Personalities.__dict__:
-            if not property.startswith("__") and property != "get_names" and property != "find" and property != "find_by_title":
+            if not property.startswith("__") and property != "avaliable" and property != "has" and property != "find" and property != "find_by_title":
                 personality = Personalities.find(property)
                 if personality.title == title:
                     return personality

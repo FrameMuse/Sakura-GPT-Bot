@@ -1,6 +1,4 @@
 from db.repositories.repository import Repository
-import datetime
-from enum import Enum
 
 class PromocodesRepository(Repository):
     def __init__(self):
@@ -15,15 +13,15 @@ class PromocodesRepository(Repository):
             }
         )
 
-    def add(self, code:str, tokens:int,expired_at:str="") -> None:
-        self.add_row({
+    def add(self, code: str, tokens: int, expired_at: str = "") -> None:
+        self._add_row({
             "code": code,
             "tokens": tokens,
-            "created_at": self.timestamp(),
+            "created_at": self._timestamp(),
         })
 
-    def find(self,code:str):
-        return self.find_by_column("code", code)
+    def find(self, code: str):
+        return self._find_by_column("code", code)
 
 # repository = PromocodesRepository()
 

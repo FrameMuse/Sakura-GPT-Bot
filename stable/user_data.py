@@ -12,9 +12,7 @@ def get_users_data_total(ngt_tokens: int = 25_000):
     total_users_daily = 0
 
     # loop through all subdirectories in the parent directory
-    for user_dir in os.listdir(USER_DATA_DIRECTORY):
-        user = User(int(user_dir))
-       
+    for user in User.findall():
         if user.balance.amount > ngt_tokens:
             continue
 

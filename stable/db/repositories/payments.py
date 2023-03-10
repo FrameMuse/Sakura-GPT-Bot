@@ -1,4 +1,4 @@
-from repository import Repository
+from db.repositories.repository import Repository
 
 from enum import Enum
 
@@ -31,6 +31,9 @@ class PaymentsRepository(Repository):
             "created_at": self._timestamp(),
             "updated_at": self._timestamp(),
         })
+
+    def find(self, payment_id: str):
+        return self._find_by_column("payment_id", payment_id)
 
     def set_status(self, payment_id: str, status: Status):
         self._update_column("payment_id", payment_id, "status", status.name)

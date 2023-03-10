@@ -8,8 +8,9 @@ from goods import Good, Goods
 from yookassa import Configuration, Payment
 from yookassa.domain.response import PaymentResponse
 
+from db.repositories.payments import PaymentsRepository
+
 from user import User
-from db_interface import DatabaseInterface
 
 load_dotenv()
 
@@ -40,11 +41,9 @@ def create_payment(user: User, good: Good):
 
     payment_data = json.loads(payment.json())
 
-    db = DatabaseInterface()
-
-
-    db.create_payment(payment_data["id"], user.id, user.username, good)
-    db.close()
+    repository = PaymentsRepository()
+    repository.create(payment_data["id"], user.id, good.quantity)
+    repository.close()
 
     return json.loads(payment.json())
 

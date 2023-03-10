@@ -88,7 +88,7 @@ class User(Serializable):
     @staticmethod
     def __get_storage_path(id: int):
         return Path(f"{USER_DATA_DIRECTORY}/{id}/user.json")
-
+    
     @staticmethod
     def findall() -> "list[User]":
         users: "list[User]" = []
@@ -98,6 +98,11 @@ class User(Serializable):
             users.append(user)
 
         return users
+
+    @staticmethod
+    def findall_ids():
+        return os.listdir(USER_DATA_DIRECTORY)
+
 
     @staticmethod
     def from_telebot(from_user: telebot.types.User) -> "User":

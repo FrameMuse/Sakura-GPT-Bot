@@ -133,7 +133,7 @@ def texts(message: types.Message):
     if not user.balance.sufficient_chars(len(message.text)):
         bot.send_message(message.chat.id, f"""
 Уууппс, у тебя недостаточно токенов для отправки сообщения!
-Твой баланс токенов равен: {str(user.balance)}
+Твой баланс токенов равен: {str(int(user.balance.amount))}
 """)
         return
 

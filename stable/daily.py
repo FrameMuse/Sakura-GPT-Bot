@@ -13,6 +13,9 @@ class DailyTokens:
     def __str__(self) -> str:
         return str(self.__last_daily)
 
+    def set_obtained(self, timestamp: float):
+        self.__last_daily = timestamp
+
     def obtain(self):
         self.__last_daily = time()
         self.__events.emit("obtained", DAILY_TOKENS)

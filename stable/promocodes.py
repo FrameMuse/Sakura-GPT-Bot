@@ -5,7 +5,7 @@ from pyee.twisted import TwistedEventEmitter
 from db.repositories.promocodes import PromocodesRepository
 
 
-class Promocodes(PromocodesRepository):
+class Promocodes():
     def __init__(self, applied: "list[str] | str" = []):
         if isinstance(applied, list):
             self.__applied: "list[str]" = applied
@@ -36,8 +36,8 @@ class Promocodes(PromocodesRepository):
         self.__events.on("applied", callback)
         
     def find(self, code: str):
-        self = PromocodesRepository()
-        promocode = self.find(code)
-        self.close()
+        repository = PromocodesRepository()
+        promocode = repository.find(code)
+        repository.close()
 
         return promocode

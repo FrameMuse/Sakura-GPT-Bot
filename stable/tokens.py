@@ -25,7 +25,7 @@ class Tokens:
         Removes `amount` of tokens.
         """
 
-        self.amount = amount
+        self.amount -= amount
         self.__events.emit("amount_update")
 
         return self.amount

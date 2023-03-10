@@ -4,9 +4,8 @@ import telebot
 import json
 
 from dotenv import load_dotenv
-from goods import Good, Goods
+from goods import Good
 from yookassa import Configuration, Payment
-from yookassa.domain.response import PaymentResponse
 
 from db.repositories.payments import PaymentsRepository
 
@@ -47,44 +46,14 @@ def create_payment(user: User, good: Good):
 
     return json.loads(payment.json())
 
-def on_success_payment(user: User, credited_tokens: int):
+def on_success_payment(user: User, tokens: int):
+    user.balance.credit(tokens)
+    
     message = f"""
 🌸 Аввввррр, спасибо мой дорогой друг!
 
-На твой баланс токенов было зачислено {credited_tokens} токенов!
+На твой баланс токенов было зачислено {tokens} токенов!
 Теперь у тебя {user.balance} токеньчиков! ❤️
 """
 
     bot.send_message(user.id, message)
-
-# user = User("name",565324826)
-# url = create_payment(Goods.Tokens.option3,user)
-
-# print(url)
-
-
-
-
-
-# payment = {"amount": {"currency": "RUB", "value": "499.00"}, "confirmation": {"confirmation_url": "https://yoomoney.ru/checkout/payments/v2/contract?orderId=2b984aba-000f-5000-9000-10fe47251494", "type": "redirect"}, "created_at": "2023-03-06T18:54:50.745Z", "description": "3750 Токенов - 499 RUB", "id": "2b984aba-000f-5000-9000-10fe47251494", "metadata": {}, "paid": False, "recipient": {"account_id": "200134", "gateway_id": "2057098"}, "refundable": False, "status": "pending", "test": True}
-
-
-# payment = Payment.create({
-#     "amount": {
-#         "value": "69",
-#         "currency": "RUB"
-#     },
-#     "confirmation": {
-#       "type": "redirect",
-#       "return_url": "https://t.me/sakuraGPTbot"
-#     },
-#     "capture": True,
-#     "description": "Заказ №1"
-# }, uuid.uuid4())
-
-# print(payment.json())
-
-# "confirmation": {
-#         "type": "",
-#         "text": "heooo"
-#     },

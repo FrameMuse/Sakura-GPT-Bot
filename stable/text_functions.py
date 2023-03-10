@@ -48,7 +48,7 @@ def on_profile_button(bot: TeleBot, user: User):
 
 
 def text(bot: TeleBot, user: User, user_message: str):
-    log_text(user_message, user, user.message_history.Role.USER)
+    # log_text(user_message, user, user.message_history.Role.USER)
 
     bot.send_chat_action(user.id, "typing")
 
@@ -62,7 +62,7 @@ def text(bot: TeleBot, user: User, user_message: str):
         bot.send_message(user.id, "⚙️ Не удалось синтезировать ответ.")
         return
 
-    log_text(assistant_message, user, user.message_history.Role.ASSISTANT)
+    # log_text(assistant_message, user, user.message_history.Role.ASSISTANT)
     user.balance.debit_chars(len(user_message))
 
 

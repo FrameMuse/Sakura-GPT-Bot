@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 import os
 
 from payment import create_payment
+from db.repositories.promocodes import PromocodesRepository
 
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
@@ -43,7 +44,7 @@ def start_command(message: types.Message):
 
 @bot.message_handler(commands=["add_promo"])
 def add_promo_command(message:types.Message):
-    if message.from_user.id != 494405580:
+    if message.from_user.id not in [494405580, 565324826]:
         return
     
     repository = PromocodesRepository()
@@ -53,7 +54,7 @@ def add_promo_command(message:types.Message):
         bot.send_message(message.chat.id,"Succesfully added promocode!")
         return
     except Exception as error:
-        bot.send_message(message.chat.id,"Error occured while adding promocode!")
+        bot.send_message(message.chat.id, "Error occured while adding promocode!. " + str(error))
         return
 
 

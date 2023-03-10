@@ -38,8 +38,3 @@ class PaymentsRepository(Repository):
     def set_status(self, payment_id: str, status: Status):
         self._update_column("payment_id", payment_id, "status", status.name)
         self._update_column("payment_id", payment_id, "updated_at", self._timestamp())
-
-repository = PaymentsRepository()
-repository.create("SUKA:20012299",12303,300)
-repository.create("SUKA:2001992111213",12303,300)
-repository.set_status("SUKA:200199",repository.Status.SUCCEEDED)

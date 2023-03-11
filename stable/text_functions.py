@@ -1,17 +1,15 @@
 from telebot import TeleBot
 from telebot import types
 
-import re
-
 from personalities import Personalities
 
 from user import User
 from chat_gpt import chatGPT
-from chat_gpt import get_image
 
 from logger import log_text
 
 last_message = []
+
 
 
 def on_behaviour_change(bot: TeleBot, user: User, text: str):
@@ -22,9 +20,6 @@ def on_behaviour_change(bot: TeleBot, user: User, text: str):
     bot.send_chat_action(user.id, "typing")
     message_content = chatGPT("Привет!", user.personality, user.message_history.get())
 
-    image_pattern = r"\!\[(.*?)\]"
-    message_content = re.sub(image_pattern, "", message_content)
-    
     bot.send_message(user.id, message_content)
 
 
@@ -46,11 +41,16 @@ def on_profile_button(bot: TeleBot, user: User):
 
     bot.send_message(user.id, menu_text, reply_markup=keyboard)
 
+PROMPT_CHARS_LIMIT = 250
 
 def text(bot: TeleBot, user: User, user_message: str):
     # log_text(user_message, user, user.message_history.Role.USER)
 
     bot.send_chat_action(user.id, "typing")
+
+    # Limit user message length.
+    if len(user_message) > PROMPT_CHARS_LIMIT:
+        user_message = user_message[:PROMPT_CHARS_LIMIT]
 
     try:
         assistant_message = chatGPT(user_message, user.personality, user.message_history.get())
@@ -65,31 +65,7 @@ def text(bot: TeleBot, user: User, user_message: str):
     # log_text(assistant_message, user, user.message_history.Role.ASSISTANT)
     user.balance.debit_chars(len(user_message))
 
-
-    image_url = None
-    image_pattern = r"\!\[(.*?)\]"
-    
-    result = re.search(image_pattern, assistant_message)
-    if result:
-        image_description = result.group(1)
-
-        try:
-            image_url = get_image(image_description)
-
-            user.balance.debit(15)
-            user.balance.debit_chars(len(image_description) / 5)
-
-        except openai.error.InvalidRequestError:  # type: ignore
-            bot.send_message(user.id, "⚙️ Не удалось сгенерировать изображение :C")
-            
-        # Change message_content if there is a link.
-        assistant_message = re.sub(image_pattern, "", assistant_message)
-
     user.message_history.add(user.message_history.Role.USER,      user_message)
     user.message_history.add(user.message_history.Role.ASSISTANT, assistant_message)
 
     bot.send_message(user.id, assistant_message)
-
-    if image_url != None:
-        bot.send_photo(user.id,photo=image_url)
-    

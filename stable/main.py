@@ -18,6 +18,8 @@ import os
 from payment import create_payment
 from db.repositories.promocodes import PromocodesRepository
 
+from threading import Thread
+
 load_dotenv()
 openai.api_key = os.environ.get("OPEN_AI_KEY")
 token = os.environ.get("TELEGRAM_KEY")
@@ -26,6 +28,8 @@ bot = telebot.TeleBot(str(token))
 
 regex = r"\[image description: (.*?)]"
 
+
+admins_uids = [494405580, 565324826]
 
 ### --- Commands Handlers --- ###
 
@@ -44,7 +48,7 @@ def start_command(message: types.Message):
 
 @bot.message_handler(commands=["add_promo"])
 def add_promo_command(message:types.Message):
-    if message.from_user.id not in [494405580, 565324826]:
+    if message.from_user.id not in admins_uids:
         return
     
     repository = PromocodesRepository()
@@ -55,6 +59,22 @@ def add_promo_command(message:types.Message):
         return
     except Exception as error:
         bot.send_message(message.chat.id, "Error occured while adding promocode!. " + str(error))
+        return
+    
+
+@bot.message_handler(commands=["remove_promo"])
+def remove_promo_command(message:types.Message):
+    if message.from_user.id not in admins_uids:
+        return
+    
+    repository = PromocodesRepository()
+
+    try:
+        repository.remove(str(message.text).split(" ")[1])
+        bot.send_message(message.chat.id,"Succesfully removed promocode!")
+        return
+    except Exception as error:
+        bot.send_message(message.chat.id, "Error occured while removing promocode!. " + str(error))
         return
 
 
@@ -161,6 +181,7 @@ def texts(message: types.Message):
         on_behaviour_change(bot, user, message.text)
         return
 
-    text(bot, user, message.text)
+    Thread(target=text,args=(bot,user,message.text)).start()
+    
 
 bot.infinity_polling()

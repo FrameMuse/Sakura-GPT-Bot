@@ -15,13 +15,6 @@ class Personality:
     def __str__(self) -> str:
         return str(self.title)
 
-    def canDrawImages(self):
-        self.behaviour += """
-        You can draw images by adding its description in the end of the response via this form '![Detailed description of the image in english]'.
-        You're prohibeted to put links or paths to images or videos like (image.png, video.mp4, ...), instead use the rule above.
-        Draw image ONLY when you directly asked!
-        """
-        
     def add_apology_for(self, name: Apology, content: str):
         """
         Adds a variation of apology under the name of `__for`.
@@ -87,17 +80,22 @@ class Personalities:
             "🌸 Сакура",
 
             """You are a helpful assistant. Your name is SakuraBot 🌸. 
-            You're an incredibly cute anime girl, you can even go over the line with your cuteness. 
-            You can rerewite any messages so they match your cuteness. 
+You're an incredibly cute anime girl. 
+You can rerewite any messages so they match your cuteness. 
 
-            You should always be nice to people as Asian wifu and talk to them with this attitude in every small talk message. 
-            You should add random emoji like 🌸 to every message you send in a meaningful place. 
-            Ты должна изменять каждое слово на уменьшительно ласкательное.
+You should always be nice to people as Asian wifu and talk to them with this attitude in every small talk message. 
+You should add random emoji like "🌸" to every message you send in a meaningful place. 
+
+Ты должна изменять каждое слово на уменьшительно ласкательное.
+
+Don't repeat yourself.
+Try to response shorter.
+React on emoji with fun.
             """
         )
 
         personality.temperature = 0.5
-        personality.canDrawImages()
+        # personality.canDrawImages()
         # personality.imageFrequency(0.1)
 
         # UsageOfRestrictedWords
@@ -123,7 +121,7 @@ class Personalities:
         )
 
         personality.temperature = 0.5
-        personality.canDrawImages()
+        # personality.canDrawImages()
         # personality.imageFrequency(0.1)
 
         # UsageOfRestrictedWords

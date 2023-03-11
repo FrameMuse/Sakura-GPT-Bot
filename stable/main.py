@@ -183,5 +183,12 @@ def texts(message: types.Message):
 
     Thread(target=text,args=(bot,user,message.text)).start()
     
+@bot.message_handler(content_types=["sticker"])
+def on_sticker_sent(message: types.Message):
+    if not message.sticker: return
+    
+    user = User.from_telebot(message.from_user)
+    
+    Thread(target=text,args=(bot, user, message.sticker.emoji)).start()
 
 bot.infinity_polling()
